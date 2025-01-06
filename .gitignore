@@ -141,3 +141,4 @@ dist
 .storage
 storage/*
 temp.md
+data.db

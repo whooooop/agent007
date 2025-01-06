@@ -5,8 +5,9 @@ import { Logger } from './logger.mjs'
 export class Storage {
     rootDir = 'storage'
 
-    constructor (space = 'temp') {
+    constructor (space = 'temp', options = { debug: true }) {
         this.space = space;
+        this.debug = options.debug;
         this.logger = new Logger(`Cache ${space}`)
     }
 
@@ -16,7 +17,7 @@ export class Storage {
         const path = resolve(dir, name);
         await mkdir(dir, { recursive: true });
 
-        this.logger.log('write', path);
+        this.logger.debug('write', path);
         await writeFile(path, JSON.stringify(data));
     }
 
@@ -25,7 +26,7 @@ export class Storage {
             const name = id + '.json'
             const dir = this._getDir();
             const path = resolve(dir, name)
-            this.logger.log('read', path);
+            this.logger.debug('read', path);
 
             const data = await readFile(path, 'utf-8');
             return JSON.parse(data);
@@ -43,7 +44,7 @@ export class Storage {
             const name = id + '.json'
             const dir = this._getDir();
             const path = resolve(dir, name)
-            this.logger.log('remove', path);
+            this.logger.debug('remove', path);
             await rm(path)
         } catch (e) {}
     }

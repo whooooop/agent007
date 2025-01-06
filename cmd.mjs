@@ -1,20 +1,18 @@
-import { auth } from './telegram.mjs'
-import { watch } from './watch.mjs'
-import { init } from './init.mjs'
+import { App } from './app.mjs'
 
+const app = new App();
 const args = process.argv.slice(2);
 
-if (args.includes('tgauth')) {
-    await auth();
-} else if (args.includes('watch')) {
-    watch()
-}  else if (args.includes('init')) {
-    init()
-} else {
-    console.log(`Unknown command:`, args);
-    console.log(`Use:`, [
-        'tgauth',
-        'init',
-        'watch'
-    ])
-}
+app.initialize().then(async () => {
+    if (args.includes('start')) {
+        app.start();
+    }  else if (args.includes('install')) {
+        await app.install();
+    } else {
+        console.log(`Unknown command:`, args);
+        console.log(`Use:`, [
+            'install',
+            'start',
+        ]);
+    }
+});
