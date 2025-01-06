@@ -59,8 +59,11 @@ export class Solana {
         const swaps = await this.getAccountTokenSwaps(accountAddress, tokenSwap);
         let message = '';
         const token = swaps.tokens[tokenSwap];
+        const tokenAccountUrl = await getTokenAccountUrl(accountAddress, tokenSwap);
+        const dexscreenerUrl = getDexscreenerUrl(tokenSwap, accountAddress);
+
         if (swaps.swaps.length === 1) message += `🆕 `
-        message += `<b>${token.symbol} (${token.name})</b>\r\n`;
+        message += `<b><a href="${dexscreenerUrl}">${token.symbol} (${token.name})</a></b>\r\n`;
         if (token.description) {
             message += token.description + `\r\n`;
         }
@@ -73,12 +76,10 @@ export class Solana {
             const tokenOut = swaps.tokens[swap.token_out];
             const amountIn = applyDecimalsBigInt(swap.amount_in, tokenIn.decimals);
             const amountOut = applyDecimalsBigInt(swap.amount_out, tokenOut.decimals);
-            message += icon + `Swap ${amountOut} <b>${tokenOut.symbol}</b> for ${amountIn} <b>${tokenIn.symbol}</b>\r\n`;
+            const txUrl = getSolscanTxUrl(swap.signature);
+            message += icon + `<a href="${txUrl}">Swap</a> ${amountOut} <b>${tokenOut.symbol}</b> for ${amountIn} <b>${tokenIn.symbol}</b>\r\n`;
         }
         message += `---\r\n`;
-
-        const tokenAccountUrl = await getTokenAccountUrl(accountAddress, tokenSwap);
-        const dexscreenerUrl = getDexscreenerUrl(tokenSwap, accountAddress);
         message += `<a href="${dexscreenerUrl}">Dexscreener</a>\r\n`;
         message += `<a href="${tokenAccountUrl}">All swaps</a>\r\n`;
 
