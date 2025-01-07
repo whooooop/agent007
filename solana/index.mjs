@@ -1,17 +1,14 @@
 import { Logger } from '../utils/logger.mjs'
-import { PublicKey } from '@solana/web3.js';
-import { getAssociatedTokenAddress } from '@solana/spl-token';
 
 import chalk from 'chalk'
 import { SolanaRepository } from './repository.mjs'
 import { SolanaRpc } from './rpc.mjs'
 import { Telegram } from '../telegram/index.mjs'
-import { promisify } from 'util'
+import { absBigInt } from './helpers/bigint.mjs'
+import { getAnotherTokenFromSwap, getTokensFromSwaps } from './helpers/token.mjs'
+import { swapTemplate } from './messages/swap.mjs'
 
-const absBigInt = (value) => value < 0n ? -value : value;
 const logger = new Logger('solana');
-const solAddress = 'So11111111111111111111111111111111111111112';
-const sleep = promisify(setTimeout);
 
 export class Solana {
     processing = false;
@@ -40,6 +37,12 @@ export class Solana {
         const txs = await this.findNewSignatures('GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z');
     }
 
+    async addAccountToWatch (accountAddress, chatId = null) {
+        const signatures = await this.rpc.getFinalizedSignaturesForAddress(accountAddress, { limit: 1 });
+        const lastSignature = signatures[0].signature;
+        await this.repository.addAccountToWatch(accountAddress, lastSignature);
+    }
+
     async findNewSignatures(accountAddress) {
         logger.log('Find new tx`s by account', accountAddress);
         const accountTxsInfo = await this.repository.getAccountTxsInfo(accountAddress);
@@ -57,34 +60,11 @@ export class Solana {
 
     async swapNotification (accountAddress, tokenSwap) {
         const swaps = await this.getAccountTokenSwaps(accountAddress, tokenSwap);
-        let message = '';
-        const token = swaps.tokens[tokenSwap];
-        const tokenAccountUrl = await getTokenAccountUrl(accountAddress, tokenSwap);
-        const dexscreenerUrl = getDexscreenerUrl(tokenSwap, accountAddress);
-
-        if (swaps.swaps.length === 1) message += `🆕 `
-        message += `<b><a href="${dexscreenerUrl}">${token.symbol} (${token.name})</a></b>\r\n`;
-        if (token.description) {
-            message += token.description + `\r\n`;
-        }
-        message += `\r\n`;
-
-        for (const swap of swaps.swaps) {
-            const isBuy = swap.token_in === tokenSwap;
-            const icon = isBuy ? '🟢 ' : '🔴 ';
-            const tokenIn = swaps.tokens[swap.token_in];
-            const tokenOut = swaps.tokens[swap.token_out];
-            const amountIn = applyDecimalsBigInt(swap.amount_in, tokenIn.decimals);
-            const amountOut = applyDecimalsBigInt(swap.amount_out, tokenOut.decimals);
-            const txUrl = getSolscanTxUrl(swap.signature);
-            message += icon + `<a href="${txUrl}">Swap</a> ${amountOut} <b>${tokenOut.symbol}</b> for ${amountIn} <b>${tokenIn.symbol}</b>\r\n`;
-        }
-        message += `---\r\n`;
-        message += `<a href="${dexscreenerUrl}">Dexscreener</a>\r\n`;
-        message += `<a href="${tokenAccountUrl}">All swaps</a>\r\n`;
+        const message = await swapTemplate(accountAddress, tokenSwap, swaps);
 
         const con = await this.telegram.client.getConnection();
-        con.sendMessage(5008441322, {
+        // con.sendMessage(5008441322, {
+        con.sendMessage(-1002376488914, {
             message,
             parseMode: 'html'
         })
@@ -269,60 +249,6 @@ export function getSwapInfo(transaction, {debug = false} = {debug: false}) {
     return null;
 }
 
-function getPumpfunUrl(mintAddress) {
-    return `https://pump.fun/coin/${mintAddress}`;
-}
-
-function getDexscreenerUrl(mintAddress, accountAddress) {
-    return `https://dexscreener.com/solana/${mintAddress}${accountAddress ? `?maker=${accountAddress}` : ''}`;
-}
-
-function getSolscanTxUrl(signature) {
-    return `https://solscan.io/tx/${signature}`;
-}
-
-async function getTokenAccountUrl(accountAddress, tokenMintAddress) {
-    const tokenAccount = await getTokenAccountAddress(accountAddress, tokenMintAddress);
-    return `https://solscan.io/account/${tokenAccount}`;
-}
-
-async function getTokenAccountAddress (accountAddress, tokenMintAddress) {
-    const accountPublicKey = new PublicKey(accountAddress);
-    const tokenMintPublicKey = new PublicKey(tokenMintAddress);
-
-    // (associated token account)
-    const tokenAccount = await getAssociatedTokenAddress(
-        tokenMintPublicKey,
-        accountPublicKey
-    );
-
-    return tokenAccount.toBase58();
-}
-
-function getTokensFromSwaps(swaps) {
-    return Array.from(
-        new Set(
-            swaps.reduce((tokens, swap) => {
-                tokens.push(swap.token_in)
-                tokens.push(swap.token_out)
-                return tokens
-            }, [])
-        )
-    );
-}
-
-function getAnotherTokenFromSwap(swap) {
-    if (swap.tokenOut.mint === solAddress) {
-        return swap.tokenIn.mint;
-    } else {
-        return swap.tokenOut.mint;
-    }
-}
-
-function applyDecimalsBigInt(rawAmount, decimals) {
-    const amount = BigInt(rawAmount);
-    return Number(amount) / Math.pow(10, decimals);
-}
 
 // export async function monitorTokens(walletAddress) {
 //     const publicKey = new PublicKey(walletAddress)
