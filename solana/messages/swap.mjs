@@ -1,4 +1,10 @@
-import { getDexscreenerUrl, getSolscanTokenUrl, getSolscanTxUrl, getTokenAccountUrl } from '../helpers/url.mjs'
+import {
+    getDexscreenerUrl,
+    getJupSwapUrl, getRaydiumSwapUrl,
+    getSolscanTokenUrl,
+    getSolscanTxUrl,
+    getTokenAccountUrl
+} from '../helpers/url.mjs'
 import { applyDecimalsBigInt } from '../helpers/bigint.mjs'
 
 const NW = `\r\n`;
@@ -8,6 +14,8 @@ export async function swapTemplate (accountAddress, tokenSwap, swaps) {
     const tokenAccountUrl = await getTokenAccountUrl(accountAddress, tokenSwap);
     const dexscreenerUrl = getDexscreenerUrl(tokenSwap, accountAddress);
     const solscanTokenUrl = getSolscanTokenUrl(tokenSwap);
+    const jupUrl = getJupSwapUrl(tokenSwap);
+    const raydiumUrl = getRaydiumSwapUrl(tokenSwap);
 
     let message = '';
 
@@ -37,6 +45,8 @@ export async function swapTemplate (accountAddress, tokenSwap, swaps) {
 
     message += `---` + NW;
     message += `<a href="${dexscreenerUrl}">Dexscreener</a>` + NW;
+    message += `<a href="${jupUrl}">Jupiter</a>` + NW;
+    message += `<a href="${raydiumUrl}">Raydium</a>` + NW + NW;
     message += `<a href="${solscanTokenUrl}">Solscan Token</a>` + NW;
     message += `<a href="${tokenAccountUrl}">All swaps</a>` + NW;
 

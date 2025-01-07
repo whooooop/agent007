@@ -1,43 +1,36 @@
 import { SolanaTokenMetadataEntity } from './entities/token-metadata.entity.mjs'
 import { SolanaAccountTokenSwapEntity } from './entities/account-token-swap.entity.mjs'
-import { SolanaAccountSwapInfoEntity } from './entities/account-swap-info.entity.mjs'
+import { SolanaAccountWatchEntity } from './entities/account-watch.entity.mjs'
+import { Logger } from '../utils/logger.mjs'
+
+const logger = new Logger('solana/repository');
 
 export class SolanaRepository {
     constructor(app) {
         this.tokenMetadataRepository = app.datasource.getRepository(SolanaTokenMetadataEntity.options.name);
         this.accountTokenSwapRepository = app.datasource.getRepository(SolanaAccountTokenSwapEntity.options.name);
-        this.accountSwapInfoRepository = app.datasource.getRepository(SolanaAccountSwapInfoEntity.options.name);
+        this.accountWatchRepository = app.datasource.getRepository(SolanaAccountWatchEntity.options.name);
     }
 
-    async getAccountTxsInfo(accountAddress) {
-        const accountTxsInfo = await this.accountSwapInfoRepository
-            .createQueryBuilder('info')
-            .select([
-                'info.account',
-                'info.signature_to',
-                'info.signature_from',
-                'info.signature_first'
-            ])
-            .where('info.account = :account', { account: accountAddress })
-            .limit(1)
-            .getOne()
-        if (!accountTxsInfo) {
-            return {
-                account: accountAddress,
-                signature_to: null,
-                signature_from: null,
-                signature_first: null
-            }
-        } else {
-            return accountTxsInfo;
-        }
-    }
-
-    async setAccountSwapInfo(accountAddress, data) {
-        return this.accountSwapInfoRepository.save({
+    async addAccountToWatch(accountAddress, lastSignature, chatId = null) {
+        logger.log('add account to watch', accountAddress, lastSignature);
+        return this.accountWatchRepository.save({
             account: accountAddress,
-            ...data
+            active: true,
+            last_signature: lastSignature,
+            chat_id: chatId
         })
+    }
+
+    async updateLastSignatureForAccountToWatch(accountAddress, lastSignature) {
+        return this.accountWatchRepository.save({
+            account: accountAddress,
+            last_signature: lastSignature
+        })
+    }
+
+    async getAccountsToWatch() {
+        return this.accountWatchRepository.find()
     }
 
     async getAccountTokenSwaps(walletAddress, tokenAddress) {
@@ -62,6 +55,14 @@ export class SolanaRepository {
             signature,
             ...data
         })
+    }
+
+    async getAccountTokenSwapsBySignatures (signatures) {
+        return this.accountTokenSwapRepository
+            .createQueryBuilder('swap')
+            .select('swap.*')
+            .where('swap.signature IN (:...signatures)', { signatures })
+            .getRawMany()
     }
 
     async getTokensMetadata(tokens) {

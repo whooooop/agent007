@@ -23,6 +23,7 @@ export class App {
     }
 
     async start () {
+        // this.solana.addAccountToWatch('GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z', '-1002376488914')
         this.solana.watch();
         this.telegram.watch();
     }

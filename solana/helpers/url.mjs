@@ -1,5 +1,4 @@
-import { PublicKey } from '@solana/web3.js'
-import { getAssociatedTokenAddress } from '@solana/spl-token'
+import { getTokenAccountAddress, solAddress } from './token.mjs'
 
 export function getPumpfunUrl(mintAddress) {
     return `https://pump.fun/coin/${mintAddress}`;
@@ -18,19 +17,14 @@ export async function getTokenAccountUrl(accountAddress, tokenMintAddress) {
     return `https://solscan.io/account/${tokenAccount}`;
 }
 
-export async function getTokenAccountAddress (accountAddress, tokenMintAddress) {
-    const accountPublicKey = new PublicKey(accountAddress);
-    const tokenMintPublicKey = new PublicKey(tokenMintAddress);
-
-    // (associated token account)
-    const tokenAccount = await getAssociatedTokenAddress(
-        tokenMintPublicKey,
-        accountPublicKey
-    );
-
-    return tokenAccount.toBase58();
-}
-
 export function getSolscanTokenUrl(mintAddress) {
     return `https://solscan.io/token/${mintAddress}`;
+}
+
+export function getJupSwapUrl(mintAddress) {
+    return `https://jup.ag/swap/SOL-${mintAddress}`
+}
+
+export function getRaydiumSwapUrl(outputMint, inputMint = solAddress) {
+    return `https://raydium.io/swap/?inputMint=${inputMint}&outputMint=${outputMint}`
 }

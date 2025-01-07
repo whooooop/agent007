@@ -5,7 +5,7 @@ import { SolanaRepository } from './repository.mjs'
 import { SolanaRpc } from './rpc.mjs'
 import { Telegram } from '../telegram/index.mjs'
 import { absBigInt } from './helpers/bigint.mjs'
-import { getAnotherTokenFromSwap, getTokensFromSwaps } from './helpers/token.mjs'
+import { getAnotherTokenFromSwap, getTokenAccountAddress, getTokensFromSwaps } from './helpers/token.mjs'
 import { swapTemplate } from './messages/swap.mjs'
 
 const logger = new Logger('solana');
@@ -34,67 +34,53 @@ export class Solana {
     }
 
     async loop() {
-        const txs = await this.findNewSignatures('GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z');
+        const accounts = await this.repository.getAccountsToWatch()
+        for (const account of accounts) {
+            await this.updateWatchAccount(account);
+        }
     }
 
     async addAccountToWatch (accountAddress, chatId = null) {
         const signatures = await this.rpc.getFinalizedSignaturesForAddress(accountAddress, { limit: 1 });
         const lastSignature = signatures[0].signature;
-        await this.repository.addAccountToWatch(accountAddress, lastSignature);
+        await this.repository.addAccountToWatch(accountAddress, lastSignature, chatId);
     }
 
-    async findNewSignatures(accountAddress) {
-        logger.log('Find new tx`s by account', accountAddress);
-        const accountTxsInfo = await this.repository.getAccountTxsInfo(accountAddress);
-        const signatures = await this.rpc.getFinalizedSignaturesForAddress(accountAddress, { limit: 1000, until: accountTxsInfo.signature_from });
+    async updateWatchAccount({ account, last_signature, chat_id }) {
+        logger.log('Find new tx`s by account', account, last_signature);
+        const signatures = await this.rpc.getFinalizedSignaturesForAddress(account, { limit: 1000, until: last_signature });
+
         for (const { signature } of signatures.reverse()) {
             const tx = await this.addTx(signature);
-            await this.repository.setAccountSwapInfo(accountAddress, { signature_from: signature });
+            await this.repository.updateLastSignatureForAccountToWatch(account, signature);
             if (tx.swap) {
                 const tokenSwap = getAnotherTokenFromSwap(tx.swap);
-                await this.swapNotification(accountAddress, tokenSwap);
+                const tokenAccountAddress = await getTokenAccountAddress(account, tokenSwap);
+                await this.indexAccountToken(tokenAccountAddress);
+                await this.swapNotification(account, tokenSwap, chat_id);
             }
         }
-        return signatures;
     }
 
-    async swapNotification (accountAddress, tokenSwap) {
+    async swapNotification (accountAddress, tokenSwap, chatId) {
         const swaps = await this.getAccountTokenSwaps(accountAddress, tokenSwap);
         const message = await swapTemplate(accountAddress, tokenSwap, swaps);
 
-        const con = await this.telegram.client.getConnection();
-        // con.sendMessage(5008441322, {
-        con.sendMessage(-1002376488914, {
+        const connection = await this.telegram.client.getConnection();
+        await connection.sendMessage(chatId, {
             message,
             parseMode: 'html'
-        })
+        });
     }
 
-    async indexAccountTxs(walletAddress) {
-        logger.log('start index account', walletAddress)
+    async indexAccountToken(accountTokenAddress, limit = 100) {
+        const signatures = await this.rpc.getFinalizedSignaturesForAddress(accountTokenAddress, { limit });
+        const indexedSignatures = await this.repository.getAccountTokenSwapsBySignatures(signatures.map(({signature}) => signature));
+        const indexedSignaturesMap = new Set(indexedSignatures.map(({signature}) => signature));
 
-        while (true) {
-            const { signature_to } = await this.repository.getAccountTxsInfo(walletAddress);
-            logger.log('accountSwapInfo', { signature_to });
-
-            const signatures = await this.rpc.getFinalizedSignaturesForAddress(walletAddress, {
-                limit: 1000,
-                before: signature_to
-            });
-
-            if (!signatures.length) {
-                logger.log('finish index', walletAddress);
-                break;
-            }
-
-            for (const index in signatures) {
-                console.log('index', index, typeof index);
-                const { signature} = signatures[index];
-
-                logger.log(`request ${ signature } | ${ Number(index) + 1 } of ${ signatures.length }`);
-
+        for (const { signature } of signatures) {
+            if (!indexedSignaturesMap.has(signature)) {
                 await this.addTx(signature);
-                await this.repository.setAccountSwapInfo(walletAddress, { signature_to: signature });
             }
         }
     }
