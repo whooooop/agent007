@@ -8,6 +8,8 @@ app.initialize().then(async () => {
         app.start();
     }  else if (args.includes('install')) {
         await app.install();
+    } else if (args.includes('test')) {
+        await app.test();
     } else {
         console.log(`Unknown command:`, args);
         console.log(`Use:`, [

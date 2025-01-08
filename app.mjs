@@ -28,6 +28,10 @@ export class App {
         this.telegram.watch();
     }
 
+    async test () {
+        this.solana.test();
+    }
+
     async install(){
         await this.telegram.install();
     }

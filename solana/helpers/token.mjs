@@ -1,5 +1,6 @@
 import { PublicKey } from '@solana/web3.js'
 import { getAssociatedTokenAddress } from '@solana/spl-token'
+import { applyDecimalsBigInt } from './bigint.mjs'
 
 export const solAddress = 'So11111111111111111111111111111111111111112';
 
@@ -34,4 +35,16 @@ export function getTokensFromSwaps(swaps) {
             }, [])
         )
     );
+}
+
+export function getBalanceBySwaps(mintAddress, swaps) {
+    let value = BigInt(0);
+    for (const swap of swaps.swaps) {
+        if (swap.token_in === mintAddress) {
+            value = value + BigInt(swap.amount_in);
+        } else if (swap.token_out === mintAddress) {
+            value = value - BigInt(swap.amount_out);
+        }
+    }
+    return value.toString();
 }

@@ -7,6 +7,7 @@
   "scripts": {
     "install": "node ./cmd.mjs install",
     "start": "node ./cmd.mjs start",
+    "t": "node ./cmd.mjs test",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "keywords": [],

@@ -7,6 +7,7 @@ import {
 } from '../helpers/url.mjs'
 import { applyDecimalsBigInt } from '../helpers/bigint.mjs'
 import { getDateTimeByBlockTime } from '../helpers/date.js'
+import { getBalanceBySwaps, solAddress } from '../helpers/token.mjs'
 
 const NW = `\r\n`;
 
@@ -32,6 +33,15 @@ export async function swapTemplate (accountAddress, tokenSwap, swaps) {
 
     message += NW;
 
+    const balanceTokenSwap = applyDecimalsBigInt(
+        getBalanceBySwaps(tokenSwap, swaps),
+        swaps.tokens[tokenSwap].decimals
+    );
+    const solProfit = applyDecimalsBigInt(
+        getBalanceBySwaps(solAddress, swaps),
+        swaps.tokens[solAddress].decimals
+    );
+
     for (const swap of swaps.swaps) {
         const isBuy = swap.token_in === tokenSwap;
         const date = getDateTimeByBlockTime(swap.block_time);
@@ -44,7 +54,11 @@ export async function swapTemplate (accountAddress, tokenSwap, swaps) {
         message += icon + `<a href="${txUrl}">${date}</a> ${amountOut} <b>${tokenOut.symbol}</b> for ${amountIn} <b>${tokenIn.symbol}</b>` + NW;
     }
 
+    message += `---` + NW + NW;
+    message += `Balance: ${balanceTokenSwap} ${swaps.tokens[tokenSwap].symbol}` + NW;
+    message += `Profit: ${solProfit} Sol` + NW + NW;
     message += `---` + NW;
+
     message += `<a href="${dexscreenerUrl}">Dexscreener</a>` + NW;
     message += `<a href="${jupUrl}">Jupiter</a>` + NW;
     message += `<a href="${raydiumUrl}">Raydium</a>` + NW + NW;

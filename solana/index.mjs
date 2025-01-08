@@ -46,6 +46,18 @@ export class Solana {
         await this.repository.addAccountToWatch(accountAddress, lastSignature, chatId);
     }
 
+    async test() {
+        const account = 'GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z';
+        const signature = 'M8QmNPqeoGS6QXYUqCSNBdb5Tjnd7SS4Uqaw2dZivm1jvNU3Jef3FyoCrXtJi42g6iUCEvwMx87RVurPSTwUg7R';
+        const tx = await this.addTx(signature);
+        if (tx.swap) {
+            const tokenSwap = getAnotherTokenFromSwap(tx.swap);
+            const tokenAccountAddress = await getTokenAccountAddress(account, tokenSwap);
+            await this.indexAccountToken(tokenAccountAddress);
+            await this.swapNotification(account, tokenSwap, '5008441322');
+        }
+    }
+
     async updateWatchAccount({ account, last_signature, chat_id }) {
         logger.log('Find new tx`s by account', account, last_signature);
         const signatures = await this.rpc.getFinalizedSignaturesForAddress(account, { limit: 1000, until: last_signature });
