@@ -56,7 +56,6 @@ export class TelegramClientService {
     async getMessages(chatId, filter){
         const connection = await this.getConnection();
         const chatEntity = await connection.getEntity(chatId);
-        logger.log(`Get Messages from chat(${chatId}):`, JSON.stringify(filter))
         return connection.getMessages(chatEntity, filter);
     }
 
