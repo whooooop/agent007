@@ -6,6 +6,7 @@ import {
     getTokenAccountUrl
 } from '../helpers/url.mjs'
 import { applyDecimalsBigInt } from '../helpers/bigint.mjs'
+import { getDateTimeByBlockTime } from '../helpers/date.js'
 
 const NW = `\r\n`;
 
@@ -33,14 +34,14 @@ export async function swapTemplate (accountAddress, tokenSwap, swaps) {
 
     for (const swap of swaps.swaps) {
         const isBuy = swap.token_in === tokenSwap;
+        const date = getDateTimeByBlockTime(swap.block_time);
         const icon = isBuy ? '🟢 ' : '🔴 ';
         const tokenIn = swaps.tokens[swap.token_in];
         const tokenOut = swaps.tokens[swap.token_out];
         const amountIn = applyDecimalsBigInt(swap.amount_in, tokenIn.decimals);
         const amountOut = applyDecimalsBigInt(swap.amount_out, tokenOut.decimals);
         const txUrl = getSolscanTxUrl(swap.signature);
-
-        message += icon + `<a href="${txUrl}">Swap</a> ${amountOut} <b>${tokenOut.symbol}</b> for ${amountIn} <b>${tokenIn.symbol}</b>` + NW;
+        message += icon + `<a href="${txUrl}">${date}</a> ${amountOut} <b>${tokenOut.symbol}</b> for ${amountIn} <b>${tokenIn.symbol}</b>` + NW;
     }
 
     message += `---` + NW;
