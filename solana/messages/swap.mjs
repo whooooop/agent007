@@ -26,6 +26,7 @@ export async function swapTemplate (accountAddress, tokenSwap, swaps) {
     }
 
     message += `<b><a href="${dexscreenerUrl}">${token.symbol} (${token.name})</a></b>` + NW;
+    message += `<a href="${solscanTokenUrl}">${tokenSwap}</a>` + NW + NW;
 
     if (token.description) {
         message += token.description + NW;
@@ -53,17 +54,16 @@ export async function swapTemplate (accountAddress, tokenSwap, swaps) {
         const txUrl = getSolscanTxUrl(swap.signature);
         message += icon + `<a href="${txUrl}">${date}</a> ${amountOut} <b>${tokenOut.symbol}</b> for ${amountIn} <b>${tokenIn.symbol}</b>` + NW;
     }
-
+    message += `<a href="${tokenAccountUrl}">All swaps</a>` + NW;
     message += `---` + NW + NW;
     message += `Balance: ${balanceTokenSwap} ${swaps.tokens[tokenSwap].symbol}` + NW;
-    message += `Profit: ${solProfit} Sol` + NW + NW;
-    message += `---` + NW;
+    message += `Profit: ${solProfit} Sol` + NW;
+
+    message += NW + NW;
 
     message += `<a href="${dexscreenerUrl}">Dexscreener</a>` + NW;
     message += `<a href="${jupUrl}">Jupiter</a>` + NW;
     message += `<a href="${raydiumUrl}">Raydium</a>` + NW + NW;
-    message += `<a href="${solscanTokenUrl}">Solscan Token</a>` + NW;
-    message += `<a href="${tokenAccountUrl}">All swaps</a>` + NW;
 
     return message;
 }
