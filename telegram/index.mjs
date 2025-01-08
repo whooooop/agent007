@@ -3,7 +3,7 @@ import { Storage } from '../utils/storage.mjs'
 import { TelegramClientService } from './client.mjs'
 import input from 'input'
 
-const storageUsers = new Storage('telegram/username')
+const storageUsers = new Storage('telegram/username', { debug:  false })
 const logger = new Logger('telegram');
 const testChatId = 5008441322;
 
@@ -19,7 +19,7 @@ const watchList = [
 export class Telegram {
     processing = false;
     interval = null;
-    loopDelay = 30000;
+    loopDelay = 60000;
 
     storageTelegram = new Storage('telegram');
 
@@ -56,9 +56,7 @@ export class Telegram {
     async loop () {
         for (const { username, chatIds } of watchList) {
             let cacheData = await storageUsers.read(username, { chats: {} });
-            logger.log(username);
             for (const chatId of chatIds) {
-                logger.log(username, `Chat id (${chatId})`);
                 try {
                     let filter = { fromUser: username, limit: 10 }
                     if (cacheData.chats[chatId]?.lastId) {
@@ -68,8 +66,6 @@ export class Telegram {
                     logger.log(username, `Chat id (${chatId})`, `messages (${messages.length})`);
 
                     for (const message of messages.reverse()) {
-                        logger.log(username, `Chat id (${chatId})`, `message(${message.id})`);
-
                         if (message.replyTo) {
                             await this.client.forwardMessage(chatId, message.replyTo.replyToMsgId);
                         }

@@ -13,7 +13,7 @@ const logger = new Logger('solana');
 export class Solana {
     processing = false;
     interval = null;
-    loopDelay = 10000;
+    loopDelay = 40000;
 
     async initialize (app) {
         this.rpc = await app.inject(SolanaRpc);
