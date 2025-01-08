@@ -1,4 +1,4 @@
-import { getTokenAccountAddress, solAddress } from './token.mjs'
+import { getTokenAccountAddress } from './token.mjs'
 
 export function getPumpfunUrl(mintAddress) {
     return `https://pump.fun/coin/${mintAddress}`;
@@ -22,9 +22,9 @@ export function getSolscanTokenUrl(mintAddress) {
 }
 
 export function getJupSwapUrl(mintAddress) {
-    return `https://jup.ag/swap/SOL-${mintAddress}`
+    return `https://jup.ag/swap/SOL-${mintAddress}?referrer=91tabVGJ5NzFQSTigN1Noz2Qo8Vdd8fzw2gGJ5RTgWK1&feeBps=10`
 }
 
-export function getRaydiumSwapUrl(outputMint, inputMint = solAddress) {
-    return `https://raydium.io/swap/?inputMint=${inputMint}&outputMint=${outputMint}`
+export function getRaydiumSwapUrl(outputMint, inputMint = 'sol') {
+    return `https://raydium.io/swap/?inputMint=${inputMint}&outputMint=${outputMint}&referrer=F3Ry3WUAA5dZ9wjutBZ2jxJeVnB3BseQG7jkcT4gTApr`
 }
