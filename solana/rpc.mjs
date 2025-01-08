@@ -2,23 +2,41 @@ import { Connection, PublicKey } from '@solana/web3.js'
 import { Metaplex } from '@metaplex-foundation/js'
 import { Logger } from '../utils/logger.mjs'
 import { promisify } from 'util'
+import { RequestStackHelper } from './helpers/request-stack-helper.mjs'
 
 const logger = new Logger('solana/rpc')
 const sleep = promisify(setTimeout);
 
 export class SolanaRpc {
-    constructor() {
-        this.connection = new Connection('https://api.mainnet-beta.solana.com');
-        this.metaplex = Metaplex.make(this.connection)
+    endpoint = 'https://api.mainnet-beta.solana.com';
+    requestStack = new RequestStackHelper(5000);
+
+    createConnection() {
+        return new Connection(this.endpoint, {
+            disableRetryOnRateLimit: true
+        });
+    }
+
+    async request(method, ...args) {
+        return this.requestStack.addRequest(async () => {
+            try {
+                const connection = this.createConnection();
+                return await connection[method].apply(connection, args);
+            } catch (e) {
+                if (e?.message?.includes('429')) {
+                    console.log('retry')
+                    return this.request(method, ...args);
+                } else {
+                    throw Error(e);
+                }
+            }
+        });
     }
 
     async getParsedTransaction(signature) {
         logger.log('get tx', signature);
-        const tx = await this.connection.getParsedTransaction(
-            signature,
-            { maxSupportedTransactionVersion: 0 }
-        );
-        await sleep(5000);
+        const tx = await this.request('getParsedTransaction', signature, { maxSupportedTransactionVersion: 0 });
+        // await sleep(5000);
         return tx;
     }
 
@@ -31,9 +49,9 @@ export class SolanaRpc {
      */
     async getFinalizedSignaturesForAddress(address, options) {
         const accountPublicKey = new PublicKey(address);
-        const signatures = await this.connection.getSignaturesForAddress(accountPublicKey, options, 'finalized');
-        logger.log('received signatures', signatures.length);
-        await sleep(5000);
+        const signatures = await this.request('getSignaturesForAddress', accountPublicKey, options, 'finalized');
+        logger.log('received signatures', signatures?.length);
+        // await sleep(5000);
         return signatures;
     }
 
@@ -47,11 +65,13 @@ export class SolanaRpc {
             .pdas()
             .metadata({ mint: mintPublicKey });
 
-        const metadataAccountInfo = await this.connection.getAccountInfo(metadataAccount);
-        await sleep(2000);
+        const metadataAccountInfo = await this.request('getAccountInfo', metadataAccount);
+        await sleep(5000);
 
         if (metadataAccountInfo) {
-            const token = await this.metaplex.nfts().findByMint({ mintAddress: mintPublicKey })
+            const connection = this.createConnection();
+            const metaplex = Metaplex.make(connection);
+            const token = await metaplex.nfts().findByMint({ mintAddress: mintPublicKey });
             return {
                 address: token.address.toString(),
                 name: token.name,

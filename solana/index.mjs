@@ -7,8 +7,10 @@ import { Telegram } from '../telegram/index.mjs'
 import { absBigInt } from './helpers/bigint.mjs'
 import { getAnotherTokenFromSwap, getTokenAccountAddress, getTokensFromSwaps } from './helpers/token.mjs'
 import { swapTemplate } from './messages/swap.mjs'
+import { promisify } from 'util'
 
 const logger = new Logger('solana');
+const sleep = promisify(setTimeout);
 
 export class Solana {
     processing = false;
@@ -48,14 +50,23 @@ export class Solana {
 
     async test() {
         const account = 'GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z';
-        const signature = 'M8QmNPqeoGS6QXYUqCSNBdb5Tjnd7SS4Uqaw2dZivm1jvNU3Jef3FyoCrXtJi42g6iUCEvwMx87RVurPSTwUg7R';
-        const tx = await this.addTx(signature);
-        if (tx.swap) {
-            const tokenSwap = getAnotherTokenFromSwap(tx.swap);
-            const tokenAccountAddress = await getTokenAccountAddress(account, tokenSwap);
-            await this.indexAccountToken(tokenAccountAddress);
-            await this.swapNotification(account, tokenSwap, '5008441322');
-        }
+        // const signature = 'M8QmNPqeoGS6QXYUqCSNBdb5Tjnd7SS4Uqaw2dZivm1jvNU3Jef3FyoCrXtJi42g6iUCEvwMx87RVurPSTwUg7R';
+        // const tx = await this.addTx(signature);
+        // if (tx.swap) {
+        //     const tokenSwap = getAnotherTokenFromSwap(tx.swap);
+        //     const tokenAccountAddress = await getTokenAccountAddress(account, tokenSwap);
+        //     await this.indexAccountToken(tokenAccountAddress);
+        //     await this.swapNotification(account, tokenSwap, '5008441322');
+        // }
+
+        // setInterval(async () => {
+        //     try {
+        //         const r1 = await this.rpc.getFinalizedSignaturesForAddress(account, { limit: 1 });
+        //         console.log('r1', r1)
+        //     } catch (e) {
+        //         console.log('eeeee', e)
+        //     }
+        // }, 2000);
     }
 
     async updateWatchAccount({ account, last_signature, chat_id }) {
@@ -246,45 +257,3 @@ export function getSwapInfo(transaction, {debug = false} = {debug: false}) {
 
     return null;
 }
-
-
-// export async function monitorTokens(walletAddress) {
-//     const publicKey = new PublicKey(walletAddress)
-//
-//     const tokenAccounts = await connection.getTokenAccountsByOwner(publicKey, {
-//         programId: TOKEN_PROGRAM_ID
-//     })
-//
-//     for (const {account, pubkey} of tokenAccounts.value) {
-//         try {
-//             const decodedData = AccountLayout.decode(account.data)
-//
-//             if (decodedData.amount.toString() === '0') continue
-//             const mint = new PublicKey(decodedData.mint).toString()
-//             // const amount = u64.fromBuffer(decodedData.amount).toString();
-//             const metadata = await getTokenMetadata(decodedData.mint)
-//
-//             console.log(`Token Account: ${ pubkey.toString() }`)
-//             console.log(`Mint: ${ mint }`)
-//             console.log(`Metadata`, metadata)
-//             console.log(`Balance: ${ decodedData.amount.toString() }`)
-//             console.log(`========`)
-//         } catch (error) {
-//             console.error('Error decoding account data:', error)
-//         }
-//     }
-// }
-
-// export async function getSignatures(accountAddress) {
-//     const publicKey = new PublicKey(accountAddress)
-//
-//     try {
-//         const signatures = await connection.getSignaturesForAddress(publicKey, {limit: 2}, 'finalized')
-//         console.log('signatures', signatures)
-//         for (const signature of signatures) {
-//             await getBalanceChangesBySignature(signature, mintAddress)
-//         }
-//     } catch (error) {
-//         console.error('Error:', error)
-//     }
-// }
