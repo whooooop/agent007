@@ -59,11 +59,11 @@ export async function swapTemplate (accountAddress, tokenSwap, swaps) {
     message += `Balance: ${balanceTokenSwap} ${swaps.tokens[tokenSwap].symbol}` + NW;
     message += `Profit: ${solProfit} Sol` + NW;
 
-    message += NW + NW;
+    message += NW;
 
     message += `<a href="${dexscreenerUrl}">Dexscreener</a>` + NW;
     message += `<a href="${jupUrl}">Jupiter</a>` + NW;
-    message += `<a href="${raydiumUrl}">Raydium</a>` + NW + NW;
+    message += `<a href="${raydiumUrl}">Raydium</a>` + NW;
 
     return message;
 }
