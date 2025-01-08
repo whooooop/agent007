@@ -4,7 +4,7 @@ export function applyDecimalsBigInt(rawAmount, decimals, format = true) {
     const amount = BigInt(rawAmount);
     const val = Number(amount) / Math.pow(10, decimals);
     if (format) {
-        return formatNumber(val)
+        return formatNumber(val);
     } else {
         return val;
     }
