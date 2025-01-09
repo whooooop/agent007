@@ -1,10 +1,10 @@
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Metaplex } from '@metaplex-foundation/js'
-import { Logger } from '../utils/logger.mjs'
-import { promisify } from 'util'
+import { Logger } from '../../utils/logger.mjs'
 import { RequestStackHelper } from './helpers/request-stack-helper.mjs'
+import { promisify } from 'util'
 
-const logger = new Logger('solana/rpc')
+const logger = new Logger('solana-rpc')
 const sleep = promisify(setTimeout)
 
 export class SolanaRpc {

@@ -1,5 +1,5 @@
-import { Solana } from './solana/index.mjs'
-import { Telegram } from './telegram/index.mjs'
+import { Solana } from './services/solana/index.mjs'
+import { Telegram } from './services/telegram/index.mjs'
 import { CoreApp } from './core/app.mjs'
 
 export class App extends CoreApp {

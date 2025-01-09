@@ -1,7 +1,7 @@
 import { TelegramClient } from 'telegram'
-import { Storage } from '../utils/storage.mjs'
+import { Storage } from '../../utils/storage.mjs'
 import { StringSession } from 'telegram/sessions/index.js'
-import { Logger } from '../utils/logger.mjs'
+import { Logger } from '../../utils/logger.mjs'
 import input from 'input'
 
 const logger = new Logger('telegram/client')

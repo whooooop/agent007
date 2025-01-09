@@ -1,15 +1,15 @@
-import { Logger } from '../utils/logger.mjs'
+import { Logger } from '../../utils/logger.mjs'
 
 import chalk from 'chalk'
 import { SolanaRepository } from './repository.mjs'
-import { SolanaRpc } from './rpc.mjs'
 import { Telegram } from '../telegram/index.mjs'
 import { absBigInt } from './helpers/bigint.mjs'
 import { getAnotherTokenFromSwap, getTokenAccountAddress, getTokensFromSwaps } from './helpers/token.mjs'
 import { swapTemplate } from './messages/swap.mjs'
 import { promisify } from 'util'
 import { solanaAccountNewTx } from './solana.events.mjs'
-import { Loop } from '../utils/loop.mjs'
+import { Loop } from '../../utils/loop.mjs'
+import { SolanaRpc } from '../sol-rpc/index.mjs'
 
 const logger = new Logger('solana')
 const sleep = promisify(setTimeout)

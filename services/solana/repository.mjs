@@ -1,8 +1,8 @@
 import { SolanaTokenMetadataEntity } from './entities/token-metadata.entity.mjs'
 import { SolanaAccountTokenSwapEntity } from './entities/account-token-swap.entity.mjs'
 import { SolanaAccountWatchEntity } from './entities/account-watch.entity.mjs'
-import { Logger } from '../utils/logger.mjs'
-import { Database } from '../database.mjs'
+import { Logger } from '../../utils/logger.mjs'
+import { Database } from '../../database.mjs'
 
 const logger = new Logger('solana/repository')
 

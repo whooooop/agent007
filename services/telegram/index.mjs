@@ -1,8 +1,8 @@
-import { Logger } from '../utils/logger.mjs'
-import { Storage } from '../utils/storage.mjs'
+import { Logger } from '../../utils/logger.mjs'
+import { Storage } from '../../utils/storage.mjs'
 import { TelegramClientService } from './client.mjs'
 import input from 'input'
-import { Loop } from '../utils/loop.mjs'
+import { Loop } from '../../utils/loop.mjs'
 
 const storageUsers = new Storage('telegram/username', {debug: false})
 const logger = new Logger('telegram')
