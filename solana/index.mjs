@@ -49,14 +49,14 @@ export class Solana {
     }
 
     async test() {
-        const account = 'GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z';
-        // const signature = 'M8QmNPqeoGS6QXYUqCSNBdb5Tjnd7SS4Uqaw2dZivm1jvNU3Jef3FyoCrXtJi42g6iUCEvwMx87RVurPSTwUg7R';
+        // const account = 'GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z';
+        // const signature = '5mWxw9WGBMkurXmScDGe6Sj1TitXStC3EMdgvZqs7xjcXYmrP8nSRZAcP5YjCDgWS63hAMMdUeTW1nvPNyRHSFja';
         // const tx = await this.addTx(signature);
         // if (tx.swap) {
         //     const tokenSwap = getAnotherTokenFromSwap(tx.swap);
         //     const tokenAccountAddress = await getTokenAccountAddress(account, tokenSwap);
         //     await this.indexAccountToken(tokenAccountAddress);
-        //     await this.swapNotification(account, tokenSwap, '5008441322');
+        //     await this.swapNotification(account, tokenSwap, '-1002376488914');
         // }
 
         // setInterval(async () => {

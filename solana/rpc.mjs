@@ -58,9 +58,11 @@ export class SolanaRpc {
     // https://github.com/cryptoloutre/fetch-token-and-its-metadata
     async getTokensMetadata(mintAddress) {
         logger.log('get token metadata', mintAddress);
+        const connection = this.createConnection();
+        const metaplex = Metaplex.make(connection);
 
         const mintPublicKey = new PublicKey(mintAddress);
-        const metadataAccount = this.metaplex
+        const metadataAccount = metaplex
             .nfts()
             .pdas()
             .metadata({ mint: mintPublicKey });
@@ -69,8 +71,6 @@ export class SolanaRpc {
         await sleep(5000);
 
         if (metadataAccountInfo) {
-            const connection = this.createConnection();
-            const metaplex = Metaplex.make(connection);
             const token = await metaplex.nfts().findByMint({ mintAddress: mintPublicKey });
             return {
                 address: token.address.toString(),
