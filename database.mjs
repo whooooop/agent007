@@ -4,13 +4,19 @@ import { SolanaAccountTokenSwapEntity } from './solana/entities/account-token-sw
 import { SolanaAccountWatchEntity } from './solana/entities/account-watch.entity.mjs'
 
 export const AppDataSource = new DataSource({
-    type: 'sqlite',
-    database: './data.db',
-    synchronize: true,
-    logging: false,
-    entities: [
-        SolanaAccountTokenSwapEntity,
-        SolanaTokenMetadataEntity,
-        SolanaAccountWatchEntity
-    ]
-});
+  type: 'sqlite',
+  database: './data.db',
+  synchronize: true,
+  logging: false,
+  entities: [
+    SolanaAccountTokenSwapEntity,
+    SolanaTokenMetadataEntity,
+    SolanaAccountWatchEntity
+  ]
+})
+
+export class Database {
+  async initialize() {
+    this.datasource = await AppDataSource.initialize()
+  }
+}
