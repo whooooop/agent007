@@ -8,9 +8,17 @@ import { SolanaAccountWatchEntity } from "../entities/solanaAccountWatch.entity"
 export class SolanaRepository {
   private readonly logger = new Logger('solana/repository');
 
+  private readonly database: Database;
+
   private tokenMetadataRepository: Repository<SolanaTokenMetadataEntity>;
   private accountTokenSwapRepository!: Repository<SolanaAccountTokenSwapEntity>;
   private accountWatchRepository!: Repository<SolanaAccountWatchEntity>;
+
+  constructor(
+    database: Database
+  ) {
+    this.database = database;
+  }
 
   async initialize(app: any): Promise<void> {
     const database: Database = await app.inject(Database);
@@ -41,22 +49,21 @@ export class SolanaRepository {
     return this.accountWatchRepository.find();
   }
 
+  async getAccountWatchInfo(accountAddress): Promise<SolanaAccountWatchEntity> {
+    return this.accountWatchRepository.findOne({
+      where: {
+        account: accountAddress
+      }
+    });
+  }
+
   async getAccountTokenSwaps(walletAddress: string, tokenAddress: string): Promise<SolanaAccountTokenSwapEntity[]> {
     return this.accountTokenSwapRepository
       .createQueryBuilder('swap')
-      .select([
-        'swap.signature',
-        'swap.account',
-        'swap.token_in',
-        'swap.token_out',
-        'swap.amount_in',
-        'swap.amount_out',
-        'swap.block_time',
-      ])
       .where('swap.account = :account', { account: walletAddress })
       .andWhere('(swap.token_in = :token OR swap.token_out = :token)', { token: tokenAddress })
       .orderBy('swap.block_time', 'DESC')
-      .getMany();
+      .getRawMany();
   }
 
   async setAccountTokenSwap(signature: string, data: Partial<SolanaAccountTokenSwapEntity>): Promise<SolanaAccountTokenSwapEntity> {

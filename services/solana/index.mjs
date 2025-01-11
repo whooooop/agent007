@@ -6,14 +6,12 @@ import { Telegram } from '../telegram/index.mjs'
 import { absBigInt } from './helpers/bigint.mjs'
 import { getAnotherTokenFromSwap, getTokenAccountAddress, getTokensFromSwaps, solAddress } from './helpers/token.mjs'
 import { swapTemplate } from './messages/swap.mjs'
-import { promisify } from 'util'
 import { solanaAccountNewTx } from './solana.events.mjs'
 import { Loop } from '../../utils/loop.mjs'
 import { SolanaRpc } from '../sol-rpc/index.mjs'
 import { statMessageTemplate } from './messages/stat.mjs'
 
 const logger = new Logger('solana')
-const sleep = promisify(setTimeout)
 
 export class Solana {
   constructor(app) {

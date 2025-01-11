@@ -15,9 +15,6 @@ interface SwapDetails {
   amount_out: string;
 }
 
-interface Swaps {
-  swaps: SwapDetails[];
-}
 
 export function getAnotherTokenFromSwap(swap: Swap): string {
   return swap.tokenOut.mint === solAddress ? swap.tokenIn.mint : swap.tokenOut.mint;
@@ -43,9 +40,9 @@ export function getTokensFromSwaps(swaps: SwapDetails[]): string[] {
   );
 }
 
-export function getBalanceBySwaps(mintAddress: string, swaps: Swaps): string {
+export function getBalanceBySwaps(mintAddress: string, swaps: SwapDetails[]): string {
   let value = BigInt(0);
-  for (const swap of swaps.swaps) {
+  for (const swap of swaps) {
     if (swap.token_in === mintAddress) {
       value += BigInt(swap.amount_in);
     } else if (swap.token_out === mintAddress) {

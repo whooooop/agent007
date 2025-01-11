@@ -1,7 +1,9 @@
 import { AgentAPI } from "./core/agentAPI";
 
-const agentAPI = new AgentAPI({
-  logLevels: ['info', 'warn', 'error', 'debug']
-});
+(async () => {
+  const agentAPI = await AgentAPI.bootstrap({
+    logLevels: ['info', 'warn', 'error', 'debug']
+  });
 
-agentAPI.run()
+  agentAPI.getSolanaManager().watchAccounts()
+})()

@@ -1,12 +1,15 @@
 import { EntitySchema } from 'typeorm';
 
 export interface SolanaTokenMetadataEntity {
-  address: string;
-  name: string;
-  symbol: string;
-  description?: string;
-  image?: string;
-  decimals: number;
+  address: string
+  name: string
+  symbol: string
+  description: string
+  image: string
+  decimals: number
+  createdOn: string
+  twitter: string
+  website: string
 }
 
 export const SolanaTokenMetadataEntity = new EntitySchema<SolanaTokenMetadataEntity>({
@@ -38,5 +41,20 @@ export const SolanaTokenMetadataEntity = new EntitySchema<SolanaTokenMetadataEnt
     decimals: {
       type: 'tinyint',
     },
+    createdOn: {
+      type: 'varchar',
+      length: 100,
+      nullable: true,
+    },
+    twitter: {
+      type: 'varchar',
+      length: 100,
+      nullable: true,
+    },
+    website: {
+      type: 'varchar',
+      length: 200,
+      nullable: true,
+    }
   },
 });

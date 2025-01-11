@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "repository": {
     "url": "https://github.com/whooooop/agent007.git"
   },
