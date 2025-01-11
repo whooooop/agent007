@@ -2,32 +2,55 @@
   "name": "agent007",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
   "main": "index.js",
+  "repository": {
+    "url": "https://github.com/whooooop/agent007.git"
+  },
   "scripts": {
     "install": "node ./cmd.mjs install",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
     "start": "node ./cmd.mjs start",
+    "clean": "rm -rf dist",
     "t": "node ./cmd.mjs test",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "prepublish": "npm run clean && npm run build && npm run test",
+    "publish": "npm publish --access public"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@metaplex-foundation/js": "^0.20.1",
     "@metaplex-foundation/mpl-token-metadata": "^3.3.0",
     "@solana/spl-token": "^0.4.9",
     "@solana/spl-token-registry": "^0.2.4574",
     "@solana/web3.js": "^1.98.0",
-    "chalk": "^5.4.1",
+    "axios": "^1.7.9",
+    "chalk": "^4.1.2",
     "input": "^1.0.1",
-    "snowflake-id": "^1.1.0",
     "sqlite3": "^5.1.7",
     "telegraf": "^4.16.3",
     "telegram": "^2.26.16",
+    "twitter-api-v2": "^1.19.0",
     "typeorm": "^0.3.20"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
-  }
+    "@types/node": "^22.10.5",
+    "@typescript-eslint/eslint-plugin": "^8.19.1",
+    "@typescript-eslint/parser": "^8.19.1",
+    "eslint": "^9.17.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.4"
+  },
+  "author": "Whooooop",
+  "keywords": [
+    "solana",
+    "twitter",
+    "telegram",
+    "api",
+    "typescript",
+    "onchaine",
+    "blockchain"
+  ],
+  "license": "MIT"
 }

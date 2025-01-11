@@ -1,6 +1,7 @@
 import { Solana } from './services/solana/index.mjs'
 import { Telegram } from './services/telegram/index.mjs'
 import { CoreApp } from './core/app.mjs'
+import { Pumpfun } from './services/pumpfun/index.mjs'
 
 export class App extends CoreApp {
   constructor() {
@@ -10,6 +11,7 @@ export class App extends CoreApp {
   async initialize() {
     this.telegram = await this.inject(Telegram)
     this.solana = await this.inject(Solana)
+    this.pumpfun = await this.inject(Pumpfun)
   }
 
   async start() {
@@ -20,6 +22,7 @@ export class App extends CoreApp {
 
   async test() {
     this.solana.test()
+    // this.pumpfun.newTokenDetect()
   }
 
   async install() {

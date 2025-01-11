@@ -56,7 +56,7 @@ export class Solana {
     //     await this.swapNotification(account, tokenSwap, '-1002376488914');
     // }
 
-    await this.sendStat('-1002376488914', account);
+    // await this.sendStat('-1002376488914', account);
 
     // setInterval(async () => {
     //     try {
