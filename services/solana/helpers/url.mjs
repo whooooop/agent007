@@ -12,9 +12,13 @@ export function getSolscanTxUrl(signature) {
   return `https://solscan.io/tx/${ signature }`
 }
 
+export async function getAccountUrl(accountAddress) {
+  return `https://solscan.io/account/${ accountAddress }`
+}
+
 export async function getTokenAccountUrl(accountAddress, tokenMintAddress) {
   const tokenAccount = await getTokenAccountAddress(accountAddress, tokenMintAddress)
-  return `https://solscan.io/account/${ tokenAccount }`
+  return getAccountUrl(tokenAccount)
 }
 
 export function getSolscanTokenUrl(mintAddress) {

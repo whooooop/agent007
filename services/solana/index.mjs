@@ -4,12 +4,13 @@ import chalk from 'chalk'
 import { SolanaRepository } from './repository.mjs'
 import { Telegram } from '../telegram/index.mjs'
 import { absBigInt } from './helpers/bigint.mjs'
-import { getAnotherTokenFromSwap, getTokenAccountAddress, getTokensFromSwaps } from './helpers/token.mjs'
+import { getAnotherTokenFromSwap, getTokenAccountAddress, getTokensFromSwaps, solAddress } from './helpers/token.mjs'
 import { swapTemplate } from './messages/swap.mjs'
 import { promisify } from 'util'
 import { solanaAccountNewTx } from './solana.events.mjs'
 import { Loop } from '../../utils/loop.mjs'
 import { SolanaRpc } from '../sol-rpc/index.mjs'
+import { statMessageTemplate } from './messages/stat.mjs'
 
 const logger = new Logger('solana')
 const sleep = promisify(setTimeout)
@@ -23,9 +24,7 @@ export class Solana {
     this.rpc = await app.inject(SolanaRpc)
     this.repository = await app.inject(SolanaRepository)
     this.telegram = await app.inject(Telegram)
-    this.loop = new Loop(40000, async () => {
-      await this.loopHandler()
-    })
+    this.loop = new Loop(40000, () => this.loopHandler())
   }
 
   watch() {
@@ -46,8 +45,9 @@ export class Solana {
   }
 
   async test() {
-    // const account = 'GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z';
-    // const signature = '5mWxw9WGBMkurXmScDGe6Sj1TitXStC3EMdgvZqs7xjcXYmrP8nSRZAcP5YjCDgWS63hAMMdUeTW1nvPNyRHSFja';
+    const account = 'GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z';
+    const signature = '4hRJtFPPS4CVwJriyDuVqyjgqaw19R1geW2d8dJmnSVmdgYnechvh1mKyZxRTQFBAaYzBYAuKTzwWVP7bKzqByo5';
+
     // const tx = await this.addTx(signature);
     // if (tx.swap) {
     //     const tokenSwap = getAnotherTokenFromSwap(tx.swap);
@@ -55,6 +55,8 @@ export class Solana {
     //     await this.indexAccountToken(tokenAccountAddress);
     //     await this.swapNotification(account, tokenSwap, '-1002376488914');
     // }
+
+    await this.sendStat('-1002376488914', account);
 
     // setInterval(async () => {
     //     try {
@@ -105,6 +107,27 @@ export class Solana {
         await this.addTx(signature)
       }
     }
+  }
+
+  async sendStat(chatId, accountAddress) {
+    const txsIn = await this.repository.getAllSwapsToken(accountAddress, solAddress, 'in');
+    const txsOut = await this.repository.getAllSwapsToken(accountAddress, solAddress, 'out');
+    const totalSolAmountIn = txsIn.reduce((total, tx) => total + BigInt(tx.amount_in), BigInt(0))
+    const totalSolAmountOut = txsOut.reduce((total, tx) => total + BigInt(tx.amount_out), BigInt(0))
+    const tokens = await this.rpc.getTokenAccountsByOwner(accountAddress);
+
+    const message = await statMessageTemplate({
+      accountAddress,
+      totalSolAmountIn,
+      totalSolAmountOut,
+      tokens
+    })
+
+    const connection = await this.telegram.client.getConnection()
+    await connection.sendMessage(chatId, {
+      message,
+      parseMode: 'html'
+    })
   }
 
   async addTx(signature) {
@@ -161,7 +184,6 @@ export class Solana {
 
     return tokens
   }
-
 }
 
 export function getSwapInfo(transaction, {debug = false} = {debug: false}) {

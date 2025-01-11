@@ -3,6 +3,7 @@ import { Metaplex } from '@metaplex-foundation/js'
 import { Logger } from '../../utils/logger.mjs'
 import { RequestStackHelper } from './helpers/request-stack-helper.mjs'
 import { promisify } from 'util'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 
 const logger = new Logger('solana-rpc')
 const sleep = promisify(setTimeout)
@@ -19,17 +20,8 @@ export class SolanaRpc {
 
   async request(method, ...args) {
     return this.requestStack.addRequest(async () => {
-      try {
-        const connection = this.createConnection()
-        return await connection[method].apply(connection, args)
-      } catch (e) {
-        if (e?.message?.includes('429')) {
-          console.log('retry')
-          return this.request(method, ...args)
-        } else {
-          throw Error(e)
-        }
-      }
+      const connection = this.createConnection()
+      return await connection[method].apply(connection, args)
     })
   }
 
@@ -38,6 +30,14 @@ export class SolanaRpc {
     const tx = await this.request('getParsedTransaction', signature, {maxSupportedTransactionVersion: 0})
     // await sleep(5000);
     return tx
+  }
+
+  async getTokenAccountsByOwner(accountAddress) {
+    const accountPublicKey = new PublicKey(accountAddress)
+    const result = await this.request('getTokenAccountsByOwner', accountPublicKey, {
+      programId: TOKEN_PROGRAM_ID
+    })
+    return result.value
   }
 
   /**
@@ -57,31 +57,37 @@ export class SolanaRpc {
 
   // https://github.com/cryptoloutre/fetch-token-and-its-metadata
   async getTokensMetadata(mintAddress) {
-    logger.log('get token metadata', mintAddress)
-    const connection = this.createConnection()
-    const metaplex = Metaplex.make(connection)
+    return this.requestStack.addRequest(async () => {
+      logger.log('get token metadata', mintAddress)
+      const connection = this.createConnection()
+      const metaplex = Metaplex.make(connection)
 
-    const mintPublicKey = new PublicKey(mintAddress)
-    const metadataAccount = metaplex
-      .nfts()
-      .pdas()
-      .metadata({mint: mintPublicKey})
+      const mintPublicKey = new PublicKey(mintAddress)
+      const metadataAccount = metaplex
+        .nfts()
+        .pdas()
+        .metadata({mint: mintPublicKey})
 
-    const metadataAccountInfo = await this.request('getAccountInfo', metadataAccount)
-    await sleep(5000)
+      console.log('metadataAccount', metadataAccount)
+      const metadataAccountInfo = await connection.getAccountInfo(metadataAccount)
+      await sleep(5000)
 
-    if (metadataAccountInfo) {
-      const token = await metaplex.nfts().findByMint({mintAddress: mintPublicKey})
-      return {
-        address: token.address.toString(),
-        name: token.name,
-        symbol: token.symbol,
-        description: token.json?.description || null,
-        image: token.json?.image || null,
-        decimals: token.mint.decimals
+      if (metadataAccountInfo) {
+        const token = await metaplex.nfts().findByMint({mintAddress: mintPublicKey})
+        return {
+          address: token.address.toString(),
+          name: token.name,
+          symbol: token.symbol,
+          description: token.json?.description || null,
+          image: token.json?.image || null,
+          decimals: token.mint.decimals,
+          createdOn: token.json?.createdOn,
+          twitter: token.json?.twitter,
+          website: token.json?.website
+        }
+      } else {
+        return null
       }
-    } else {
-      return null
-    }
+    })
   }
 }

@@ -68,6 +68,15 @@ export class SolanaRepository {
       .getRawMany()
   }
 
+  async getAllSwapsToken(accountAddress, mintAddress, dir = 'in') {
+    return this.accountTokenSwapRepository.find({
+      where: {
+        account: accountAddress,
+        [`token_${dir}`]: mintAddress
+      }
+    })
+  }
+
   async getTokensMetadata(tokens) {
     return this.tokenMetadataRepository
       .createQueryBuilder('token')

@@ -3,10 +3,12 @@ import { promisify } from 'util'
 const sleep = promisify(setTimeout)
 
 export class RequestStackHelper {
-  constructor(interval = 5000) {
-    this.stack = []
-    this.interval = interval
-    this.isRunning = false
+  constructor(interval = 5000, maxRetries = 50, retryDelay = 5000) {
+    this.stack = [];         // Queue of requests
+    this.interval = interval; // Time between requests
+    this.isRunning = false;   // Indicates if the queue is being processed
+    this.maxRetries = maxRetries; // Max number of retries for a failed request
+    this.retryDelay = retryDelay; // Delay before retrying a failed request
   }
 
   addRequest(requestFunction) {
@@ -17,7 +19,7 @@ export class RequestStackHelper {
     return new Promise((resolve, reject) => {
       this.stack.push(async () => {
         try {
-          const result = await requestFunction()
+          const result = await this._executeWithRetry(requestFunction)
           resolve(result)
         } catch (error) {
           reject(error)
@@ -44,5 +46,26 @@ export class RequestStackHelper {
     }
 
     this.isRunning = false
+  }
+
+  // Execute a request with retries on failure
+  async _executeWithRetry(requestFunction) {
+    let attempt = 0
+
+    while (attempt <= this.maxRetries) {
+      try {
+        return await requestFunction()
+      } catch (error) {
+        if (error?.response?.status === 429 || error?.message?.includes('429') ) {
+          console.warn(`Attempt ${ attempt + 1 } failed with 429. Retrying in ${ this.retryDelay * (attempt + 1)} ms...`)
+          await sleep(this.retryDelay * (attempt + 1))
+          attempt++
+        } else {
+          throw error // If it's not a 429 error, throw it
+        }
+      }
+    }
+
+    throw new Error(`Request failed after ${ this.maxRetries } retries.`)
   }
 }
