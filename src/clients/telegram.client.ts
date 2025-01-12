@@ -2,6 +2,8 @@ import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
 import { Logger } from '../utils/logger';
 import input from 'input';
+import * as messageMethods from "telegram/client/messages";
+import { Api } from "telegram/tl";
 
 export interface TelegramClientServiceConfig {
   apiId: number,
@@ -23,7 +25,7 @@ export class AppTelegramClient {
 
   constructor(config: TelegramClientServiceConfig) {
     this.config = config;
-    this.logger.info('created');
+    this.logger.info('client created');
   }
 
   /**
@@ -100,26 +102,31 @@ export class AppTelegramClient {
    * @param filter Optional filters to apply when fetching messages.
    * @returns {Promise<any>} The list of messages.
    */
-  async getMessages(chatId: string | number, filter?: any): Promise<any> {
+  async getMessages(chatId: string | number, filter?: Partial<messageMethods.IterMessagesParams>): Promise<import("telegram/Helpers").TotalList<Api.Message>> {
     const connection = await this.getConnection();
     const chatEntity = await connection.getEntity(chatId);
     return connection.getMessages(chatEntity, filter);
   }
 
+  async sendMessage(chatId: string, params: messageMethods.SendMessageParams){
+    const connection = await this.getConnection();
+    // await connection.sendMessage(chatId, params);
+    this.logger.info('send message', chatId, params);
+  }
+
   /**
    * Forwards a message from one chat to another.
    * The destination chat is defined in the configuration file.
-   * @param fromChatId The ID or username of the chat to forward the message from.
-   * @param messageId The ID of the message to be forwarded.
    * @returns {Promise<void>}
    */
-  async forwardMessage(fromChatId: string | number, messageId: number | number[]): Promise<void> {
+  async forwardMessage(chatId: string, fromPeer: string, messageId: number): Promise<void> {
     const connection = await this.getConnection();
+    this.logger.info('forward message', chatId, fromPeer, messageId);
 
     // Forward the message to the log chat
-    await connection.forwardMessages(this.config.logChatId, {
-      messages: messageId,
-      fromPeer: fromChatId,
-    });
+    // await connection.forwardMessages(chatId, {
+    //   messages: messageId,
+    //   fromPeer,
+    // });
   }
 }

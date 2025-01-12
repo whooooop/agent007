@@ -8,14 +8,17 @@ export class NotificationService {
   constructor(telegramClient: AppTelegramClient) {
     this.telegramClient = telegramClient;
 
-    this.logger.info('created');
+    this.logger.info('service created');
   }
 
-  sendMessage (message: string) {
-    // const connection = await this.telegram.client.getConnection()
-    // await connection.sendMessage(chatId, {
-    //   message,
-    //   parseMode: 'html'
-    // })
+  async sendMessage (chatId: string, message: string) {
+    await this.telegramClient.sendMessage(chatId, {
+      message,
+      parseMode: 'html'
+    });
+  }
+
+  async forwardMessage(chaId: string, fromChatId: string, messageId: number) {
+    await this.telegramClient.forwardMessage(chaId, fromChatId, messageId);
   }
 }

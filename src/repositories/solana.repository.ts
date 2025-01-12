@@ -6,13 +6,9 @@ import { SolanaAccountTokenSwapEntity } from "../entities/solanaAccountTokenSwap
 import { SolanaAccountWatchEntity } from "../entities/solanaAccountWatch.entity";
 
 export class SolanaRepository {
-  private readonly logger = new Logger('solana/repository');
+  private readonly logger = new Logger('SolanaRepository');
 
   private readonly database: Database;
-
-  private tokenMetadataRepository: Repository<SolanaTokenMetadataEntity>;
-  private accountTokenSwapRepository!: Repository<SolanaAccountTokenSwapEntity>;
-  private accountWatchRepository!: Repository<SolanaAccountWatchEntity>;
 
   constructor(
     database: Database
@@ -20,12 +16,16 @@ export class SolanaRepository {
     this.database = database;
   }
 
-  async initialize(app: any): Promise<void> {
-    const database: Database = await app.inject(Database);
+  private get tokenMetadataRepository(): Repository<SolanaTokenMetadataEntity> {
+    return this.database.getRepository(SolanaTokenMetadataEntity);
+  }
 
-    this.tokenMetadataRepository = database.getRepository(SolanaTokenMetadataEntity);
-    this.accountTokenSwapRepository = database.getRepository(SolanaAccountTokenSwapEntity);
-    this.accountWatchRepository = database.getRepository(SolanaAccountWatchEntity);
+  private get accountTokenSwapRepository(): Repository<SolanaAccountTokenSwapEntity> {
+    return this.database.getRepository(SolanaAccountTokenSwapEntity);
+  }
+
+  private get accountWatchRepository(): Repository<SolanaAccountWatchEntity> {
+    return this.database.getRepository(SolanaAccountWatchEntity);
   }
 
   async addAccountToWatch(accountAddress: string, lastSignature: string, chatId: string | null = null): Promise<SolanaAccountWatchEntity> {

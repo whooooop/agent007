@@ -31,7 +31,7 @@ export class SolanaManager {
 
     this.watchAccountsLoop = new Loop(40000, () => this.watchAccountsHandler())
 
-    this.logger.info('created');
+    this.logger.info('manager created');
   }
 
   watchAccounts() {
@@ -65,14 +65,15 @@ export class SolanaManager {
       applyDecimalsBigInt(totalSolAmountOut.toString(), 9),
       profit,
       tokens
-    )
-    this.notificationService.sendMessage(message);
+    );
+
+    // this.notificationService.sendMessage(message);
   }
 
   private async onAccountNewSwap({ account, mint }: SolanaAccountNewSwapPayload) {
     const { swaps, tokens} = await this.solanaService.getIndexedAccountTokenSwaps(account, mint);
     const message = await swapTemplate(account, mint, swaps, tokens);
 
-    this.notificationService.sendMessage(message);
+    // this.notificationService.sendMessage(message);
   }
 }

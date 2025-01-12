@@ -12,6 +12,11 @@ import { XComServise } from "../services/xCom.servise";
 import { PumpfunService } from "../services/pumpfun.service";
 import { SolanaManager } from "../managers/solana.manager";
 import { SolanaRepository } from "../repositories/solana.repository";
+import { TelegramAccountWatchEntity } from "../entities/telegramAccountWatch.entity";
+import { TelegramRepository } from "../repositories/telegram.repository";
+import { TelegramNotificationEntity } from "../entities/telegramNotification.entity";
+import { TelegramService } from "../services/telegram.service";
+import { TelegramManager } from "../managers/telegram.manager";
 
 export interface AgentAPIConfig {
   logLevels?: LogLevel[];
@@ -25,13 +30,16 @@ export class AgentAPI {
   private readonly telegramClient: AppTelegramClient;
 
   private readonly solanaRepository: SolanaRepository;
+  private readonly telegramRepository: TelegramRepository;
 
   private readonly solanaServce: SolanaServce;
+  private readonly telegramService: TelegramService;
   private readonly notificationService: NotificationService;
   private readonly pumpfunService: PumpfunService;
   private readonly xComServise: XComServise;
 
   private readonly solanaManager: SolanaManager;
+  private readonly telegramManager: TelegramManager;
 
   constructor(config: AgentAPIConfig) {
     if (config.logLevels) {
@@ -48,7 +56,9 @@ export class AgentAPI {
       entities: [
         SolanaAccountTokenSwapEntity,
         SolanaAccountWatchEntity,
-        SolanaTokenMetadataEntity
+        SolanaTokenMetadataEntity,
+        TelegramAccountWatchEntity,
+        TelegramNotificationEntity,
       ]
     });
 
@@ -69,6 +79,9 @@ export class AgentAPI {
     this.solanaRepository = new SolanaRepository(
       this.database
     );
+    this.telegramRepository = new TelegramRepository(
+      this.database
+    );
 
     /**
      * Bootstrap Services
@@ -81,6 +94,11 @@ export class AgentAPI {
       this.solanaRepository,
       this.solanaClient
     );
+    this.telegramService = new TelegramService(
+      this.events,
+      this.telegramRepository,
+      this.telegramClient
+    );
     this.xComServise = new XComServise();
     this.pumpfunService = new PumpfunService();
 
@@ -90,6 +108,11 @@ export class AgentAPI {
     this.solanaManager = new SolanaManager(
       this.events,
       this.solanaServce,
+      this.notificationService
+    );
+    this.telegramManager = new TelegramManager(
+      this.events,
+      this.telegramService,
       this.notificationService
     );
   }
@@ -107,5 +130,9 @@ export class AgentAPI {
 
   getSolanaManager(): SolanaManager {
     return this.solanaManager;
+  }
+
+  getTelegramManager(): TelegramManager {
+    return this.telegramManager;
   }
 }

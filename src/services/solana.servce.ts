@@ -28,7 +28,7 @@ export class SolanaServce {
     this.solanaRepository = solanaRepository;
     this.solanaClient = solanaClient;
 
-    this.logger.info('created');
+    this.logger.info('service created');
   }
 
   async getAccountsToWatch(): Promise<SolanaAccountWatchEntity[]> {

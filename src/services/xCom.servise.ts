@@ -4,6 +4,6 @@ export class XComServise {
   private readonly logger = new Logger('XComServise');
 
   constructor() {
-    this.logger.info('created');
+    this.logger.info('service created');
   }
 }

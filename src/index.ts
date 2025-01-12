@@ -5,5 +5,6 @@ import { AgentAPI } from "./core/agentAPI";
     logLevels: ['info', 'warn', 'error', 'debug']
   });
 
-  agentAPI.getSolanaManager().watchAccounts()
+  // agentAPI.getSolanaManager().watchAccounts()
+  // agentAPI.getTelegramManager().watchAccounts()
 })()

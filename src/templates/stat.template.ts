@@ -13,7 +13,7 @@ export async function statTemplate(
   const accountUrl = await getAccountUrl(accountAddress);
   let message = '';
 
-  message += `All-time stats: 👤 <b><a href="${ accountUrl }">${ accountAddress }</a></b>` + NW + NW;
+  message += `All-time stats: <b><a href="${ accountUrl }">${ accountAddress }</a></b>` + NW + NW;
   message += `💸 Spent: ${totalSolAmountOut} SOL` + NW;
   message += `🚀 Profit: ${profit} SOL` + NW;
   message += `💎 Tokens: ${tokens.length}`;

@@ -10,7 +10,14 @@ export interface SolanaAccountNewSwapPayload {
   mint: string
 }
 
-export interface TelegramAccountNewMessagePayload {}
+export interface TelegramAccountNewMessagePayload {
+  username: string
+  chat_id: string
+  message: {
+    id: number,
+    replyToMsgId?: number
+  }
+}
 
 export interface EventPayload {
   [EventsRegistry.SolanaAccountNewTxEvent]: SolanaAccountNewTxPayload

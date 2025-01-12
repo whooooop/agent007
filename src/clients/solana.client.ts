@@ -37,7 +37,7 @@ export class SolanaClient {
 
   constructor() {
     this.requestStack = new RequestStackHelper(5000);
-    this.logger.info('created');
+    this.logger.info('client created');
   }
 
   createConnection(): Connection {
