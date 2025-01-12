@@ -17,6 +17,7 @@ import { TelegramRepository } from "../repositories/telegram.repository";
 import { TelegramNotificationEntity } from "../entities/telegramNotification.entity";
 import { TelegramService } from "../services/telegram.service";
 import { TelegramManager } from "../managers/telegram.manager";
+import { SolanaNotificationEntity } from "../entities/solanaNotification.entity";
 
 export interface AgentAPIConfig {
   logLevels?: LogLevel[];
@@ -57,6 +58,7 @@ export class AgentAPI {
         SolanaAccountTokenSwapEntity,
         SolanaAccountWatchEntity,
         SolanaTokenMetadataEntity,
+        SolanaNotificationEntity,
         TelegramAccountWatchEntity,
         TelegramNotificationEntity,
       ]
@@ -124,15 +126,12 @@ export class AgentAPI {
     return agentAPI;
   }
 
-  async initialize () {
+  async initialize() {
     await this.database.initialize();
   }
 
-  getSolanaManager(): SolanaManager {
-    return this.solanaManager;
-  }
-
-  getTelegramManager(): TelegramManager {
-    return this.telegramManager;
+  watch() {
+    this.solanaManager.watchAccounts();
+    this.telegramManager.watchAccounts();
   }
 }

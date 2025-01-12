@@ -30,12 +30,6 @@ export class TelegramRepository {
     })
   }
 
-  getNotificationsByAccountWatchId(account_watch_id: string): Promise<TelegramNotificationEntity[]> {
-    return this.telegramNotificationRepository.find({
-      where: { telegram_account_watch_id: account_watch_id }
-    });
-  }
-
   findAccountWatchInfo(username: string, chat_id: string): Promise<TelegramAccountWatchEntity | null> {
     return this.telegramAccountWatchRepository.findOne({
       where: { username, chat_id }
@@ -65,87 +59,16 @@ export class TelegramRepository {
     );
   }
 
+  getNotificationsByAccountWatchId(account_watch_id: string): Promise<TelegramNotificationEntity[]> {
+    return this.telegramNotificationRepository.find({
+      where: { telegram_account_watch_id: account_watch_id }
+    });
+  }
+
   async updateLastMessageId(username: string, chat_id: string, last_message_id: number): Promise<void> {
     await this.telegramAccountWatchRepository.update(
       { username, chat_id },
       { last_message_id }
     );
   }
-
-  // async addAccountToWatch(accountAddress: string, lastSignature: string, chatId: string | null = null): Promise<SolanaAccountWatchEntity> {
-  //   this.logger.info('add account to watch', accountAddress, lastSignature);
-  //   return this.accountWatchRepository.save({
-  //     account: accountAddress,
-  //     active: true,
-  //     last_signature: lastSignature,
-  //     chat_id: chatId,
-  //   });
-  // }
-  //
-  // async updateLastSignatureForAccountToWatch(accountAddress: string, lastSignature: string): Promise<SolanaAccountWatchEntity> {
-  //   return this.accountWatchRepository.save({
-  //     account: accountAddress,
-  //     last_signature: lastSignature,
-  //   });
-  // }
-  //
-  // async getAccountsToWatch(): Promise<SolanaAccountWatchEntity[]> {
-  //   return this.accountWatchRepository.find();
-  // }
-  //
-  // async getAccountWatchInfo(accountAddress): Promise<SolanaAccountWatchEntity> {
-  //   return this.accountWatchRepository.findOne({
-  //     where: {
-  //       account: accountAddress
-  //     }
-  //   });
-  // }
-  //
-  // async getAccountTokenSwaps(walletAddress: string, tokenAddress: string): Promise<SolanaAccountTokenSwapEntity[]> {
-  //   return this.accountTokenSwapRepository
-  //     .createQueryBuilder('swap')
-  //     .where('swap.account = :account', { account: walletAddress })
-  //     .andWhere('(swap.token_in = :token OR swap.token_out = :token)', { token: tokenAddress })
-  //     .orderBy('swap.block_time', 'DESC')
-  //     .getRawMany();
-  // }
-  //
-  // async setAccountTokenSwap(signature: string, data: Partial<SolanaAccountTokenSwapEntity>): Promise<SolanaAccountTokenSwapEntity> {
-  //   return this.accountTokenSwapRepository.save({
-  //     signature,
-  //     ...data,
-  //   });
-  // }
-  //
-  // async getAccountTokenSwapsBySignatures(signatures: string[]): Promise<SolanaAccountTokenSwapEntity[]> {
-  //   return this.accountTokenSwapRepository
-  //     .createQueryBuilder('swap')
-  //     .select('swap.*')
-  //     .where('swap.signature IN (:...signatures)', { signatures })
-  //     .getRawMany();
-  // }
-  //
-  // async getAllSwapsToken(accountAddress: string, mintAddress: string, dir: 'in' | 'out' = 'in'): Promise<SolanaAccountTokenSwapEntity[]> {
-  //   return this.accountTokenSwapRepository.find({
-  //     where: {
-  //       account: accountAddress,
-  //       [`token_${dir}`]: mintAddress,
-  //     },
-  //   });
-  // }
-  //
-  // async getTokensMetadata(tokens: string[]): Promise<SolanaTokenMetadataEntity[]> {
-  //   return this.tokenMetadataRepository
-  //     .createQueryBuilder('token')
-  //     .select('token.*')
-  //     .where('token.address IN (:...tokens)', { tokens })
-  //     .getRawMany();
-  // }
-  //
-  // async setTokenMetadata(address: string, data: Partial<SolanaTokenMetadataEntity>): Promise<SolanaTokenMetadataEntity> {
-  //   return this.tokenMetadataRepository.save({
-  //     address,
-  //     ...data,
-  //   });
-  // }
 }

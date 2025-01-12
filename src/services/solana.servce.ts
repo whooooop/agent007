@@ -11,6 +11,7 @@ import { SolanaAccountTokenSwapEntity } from "../entities/solanaAccountTokenSwap
 import { AppEvents } from "../core/event";
 import { EventsRegistry } from "../config/events.config";
 import { SolanaAccountWatchEntity } from "../entities/solanaAccountWatch.entity";
+import { SolanaNotificationEntity, SolanaNotificationEvent } from "../entities/solanaNotification.entity";
 
 export class SolanaServce {
   private readonly logger = new Logger('SolanaServce');
@@ -33,6 +34,30 @@ export class SolanaServce {
 
   async getAccountsToWatch(): Promise<SolanaAccountWatchEntity[]> {
     return this.solanaRepository.getAccountsToWatch();
+  }
+
+  async addAccountToWatch(account: string, notification_chat_id: string): Promise<SolanaAccountWatchEntity> {
+    const accountInfo = await this.solanaRepository.getAccountWatchInfo(account);
+    if (accountInfo) {
+      return accountInfo;
+    }
+
+    const signatures = await this.solanaClient.getSignaturesForAddress(account, { limit: 1 });
+    const lastSignature = signatures[0]?.signature;
+    return this.solanaRepository.addAccountToWatch(account, lastSignature);
+  }
+
+  async addNotification(account: string, chat_id: string, event: SolanaNotificationEvent): Promise<void> {
+    const accountInfo = await this.solanaRepository.getAccountWatchInfo(account);
+    if (!accountInfo) {
+      this.logger.error('account is not tracked', account);
+    }
+
+    await this.solanaRepository.addNotification(accountInfo.account, chat_id, event);
+  }
+
+  getNotifications(account: string, event: SolanaNotificationEvent): Promise<SolanaNotificationEntity[]>{
+    return this.solanaRepository.getNotificationsByAccount(account, event);
   }
 
   async indexAccountToken(accountAddress: string, mintAddress: string) {

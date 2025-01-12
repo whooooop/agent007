@@ -8,6 +8,7 @@ import { NotificationService } from "../services/notification.service";
 import { swapTemplate } from "../templates/swap.template";
 import { applyDecimalsBigInt } from "../helpers/bigint";
 import { statTemplate } from "../templates/stat.template";
+import { SolanaNotificationEvent } from "../entities/solanaNotification.entity";
 
 export class SolanaManager {
   private readonly logger = new Logger('SolanaManager');
@@ -66,14 +67,17 @@ export class SolanaManager {
       profit,
       tokens
     );
-
+    // const notifications = await this.solanaService.getNotifications(accountAddress, SolanaNotificationEvent.STAT);
     // this.notificationService.sendMessage(message);
   }
 
   private async onAccountNewSwap({ account, mint }: SolanaAccountNewSwapPayload) {
     const { swaps, tokens} = await this.solanaService.getIndexedAccountTokenSwaps(account, mint);
     const message = await swapTemplate(account, mint, swaps, tokens);
+    const notifications = await this.solanaService.getNotifications(account, SolanaNotificationEvent.SWAP);
 
-    // this.notificationService.sendMessage(message);
+    for (const { chat_id } of notifications) {
+      await this.notificationService.sendMessage(chat_id, message);
+    }
   }
 }

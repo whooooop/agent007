@@ -66,7 +66,7 @@ export class TelegramService {
     }
   }
 
-  async getTelegramNotifications(username, chat_id): Promise<TelegramNotificationEntity[]>{
+  async getTelegramNotifications(username: string, chat_id: string): Promise<TelegramNotificationEntity[]>{
     const accountInfo = await this.telegramRepository.findAccountWatchInfo(username, chat_id);
     if (!accountInfo) {
       return [];

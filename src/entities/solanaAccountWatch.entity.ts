@@ -2,9 +2,7 @@ import { EntitySchema } from 'typeorm';
 
 export interface SolanaAccountWatchEntity {
   account: string;
-  last_signature: string;
-  active: boolean;
-  chat_id?: string;
+  last_signature?: string;
 }
 
 export const SolanaAccountWatchEntity = new EntitySchema<SolanaAccountWatchEntity>({
@@ -19,14 +17,7 @@ export const SolanaAccountWatchEntity = new EntitySchema<SolanaAccountWatchEntit
     last_signature: {
       type: 'varchar',
       length: 100,
-    },
-    active: {
-      type: 'boolean',
-    },
-    chat_id: {
-      type: 'varchar',
-      length: 50,
-      nullable: true,
-    },
-  },
+      nullable: true
+    }
+  }
 });
