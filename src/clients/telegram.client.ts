@@ -1,11 +1,11 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
 import { Logger } from '../utils/logger';
+import { Logger as TgLogger } from "telegram/extensions";
 import input from 'input';
 import * as messageMethods from "telegram/client/messages";
 import { Api } from "telegram/tl";
 import { AppTelegramClientConfig } from "../types/telegramClientConfig.types";
-
 /**
  * TelegramClientService handles the connection and interactions with the Telegram API.
  * It manages session persistence, authentication, and common Telegram operations like fetching dialogs and forwarding messages.
@@ -31,10 +31,13 @@ export class AppTelegramClient {
     if (this.connection) return this.connection;
 
     const stringSession = new StringSession(this.config.session);
+    const levels = Array.from(Logger.levels).filter(level => level === 'info');
 
     // Initialize the Telegram client
     this.connection = new TelegramClient(stringSession, this.config.apiId, this.config.apiHash, {
       connectionRetries: 1000,
+      // @ts-ignore
+      baseLogger: new Logger('NativeTelegramClient', levels) as TgLogger
     });
 
     // Connect using the saved session if available
@@ -105,7 +108,8 @@ export class AppTelegramClient {
   }
 
   async sendMessage(chatId: string, params: messageMethods.SendMessageParams){
-    this.logger.debug('send message', chatId, params);
+    this.logger.debug('send message', chatId);
+    this.logger.verbose('params', params);
 
     const connection = await this.getConnection();
     await connection.sendMessage(chatId, params);

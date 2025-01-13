@@ -31,10 +31,10 @@ export class TelegramService {
   }
 
   async addAccountToWatch(username: string, chat_id: string, notification_chat_id: string): Promise<TelegramAccountWatchEntity> {
-    const accountInfo = await this.telegramRepository.findAccountWatchInfo(username, chat_id);
+    let accountInfo = await this.telegramRepository.findAccountWatchInfo(username, chat_id);
 
     if (!accountInfo) {
-      await this.telegramRepository.addAccountWatchInfo(username, chat_id, null);
+      accountInfo = await this.telegramRepository.addAccountWatchInfo(username, chat_id, null);
     }
 
     await this.telegramRepository.addNotification(accountInfo.id, notification_chat_id);

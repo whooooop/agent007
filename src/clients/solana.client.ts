@@ -54,7 +54,7 @@ export class SolanaClient {
   }
 
   async getParsedTransaction(signature: string): Promise<ParsedTransactionWithMeta | null> {
-    this.logger.info('get tx', signature);
+    this.logger.verbose('get tx', signature);
     const tx = await this.request<ParsedTransactionWithMeta | null>('getParsedTransaction', signature, { maxSupportedTransactionVersion: 0 });
     return tx;
   }
@@ -72,17 +72,16 @@ export class SolanaClient {
     return this.request<Promise<Array<ConfirmedSignatureInfo>>>('getSignaturesForAddress', accountPublicKey, options, 'finalized');
   }
 
-  async getTokensMetadata(mintAddress: string): Promise<SolanaTokenMetadataEntity | null> {
+  async getTokenMetadata(mintAddress: string): Promise<SolanaTokenMetadataEntity | null> {
     try {
       return await this.requestStack.addRequest(async () => {
-        this.logger.info('get token metadata', mintAddress);
+        this.logger.debug('get token metadata', mintAddress);
         const connection = this.createConnection();
         const metaplex = Metaplex.make(connection);
 
         const mintPublicKey = new PublicKey(mintAddress);
         const metadataAccount = metaplex.nfts().pdas().metadata({ mint: mintPublicKey });
 
-        this.logger.info('metadataAccount', metadataAccount);
         const metadataAccountInfo = await connection.getAccountInfo(metadataAccount);
         await sleep(5000);
 
@@ -104,7 +103,7 @@ export class SolanaClient {
         }
       });
     } catch (e) {
-      this.logger.error('Failed fetch token metadata', mintAddress);
+      this.logger.error('Failed fetch token metadata', mintAddress, e);
       return null;
     }
   }

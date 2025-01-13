@@ -13,7 +13,7 @@
     "start": "node ./cmd.mjs start",
     "clean": "rm -rf dist",
     "t": "node ./cmd.mjs test",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "jest",
     "prepublish": "npm run clean && npm run build && npm run test",
     "publish": "npm publish --access public"
   },

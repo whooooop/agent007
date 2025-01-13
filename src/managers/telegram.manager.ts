@@ -26,12 +26,13 @@ export class TelegramManager {
 
     this.appEvents.on(EventsRegistry.TelegramAccountNewMessageEvent, (payload) => this.onNewMessage(payload));
 
-    this.watchAccountsLoop = new Loop(10000, () => this.watchAccountsHandler())
+    this.watchAccountsLoop = new Loop(50000, () => this.watchAccountsHandler())
 
     this.logger.info('manager created');
   }
 
   watchAccounts() {
+    this.logger.info('watch started');
     this.watchAccountsLoop.run();
   }
 
@@ -42,7 +43,7 @@ export class TelegramManager {
       try {
         await this.telegramService.findNewMessageByAccount(id);
       } catch (e) {
-        this.logger.error('fail find new messages', username);
+        this.logger.error('fail find new messages', username, e);
       }
     }
   }

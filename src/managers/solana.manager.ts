@@ -30,12 +30,13 @@ export class SolanaManager {
 
     this.appEvents.on(EventsRegistry.SolanaAccountNewSwapEvent, (payload) => this.onAccountNewSwap(payload));
 
-    this.watchAccountsLoop = new Loop(40000, () => this.watchAccountsHandler())
+    this.watchAccountsLoop = new Loop(60000, () => this.watchAccountsHandler())
 
     this.logger.info('manager created');
   }
 
   watchAccounts() {
+    this.logger.info('watch started');
     this.watchAccountsLoop.run();
   }
 
@@ -45,7 +46,7 @@ export class SolanaManager {
       try {
         await this.solanaService.findAccountNewTxs(account);
       } catch (e) {
-        this.logger.error('Fail findAccountNewTxs', account);
+        this.logger.error('Fail findAccountNewTxs', account, e);
       }
     }
   }

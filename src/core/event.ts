@@ -34,6 +34,8 @@ export class AppEvents {
    * @returns A Promise that resolves when all handlers have completed processing.
    */
   async emit<K extends EventName>(eventName: K, payload: EventPayload[K]): Promise<void> {
+    this.logger.debug('emit event', eventName);
+
     const handlers = this.registry[eventName];
     if (handlers) {
       for (const handler of handlers) {

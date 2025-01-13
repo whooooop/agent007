@@ -30,6 +30,8 @@ export interface AgentAPIConfig {
 }
 
 export class AgentAPI {
+  private readonly logger = new Logger('AgentAPI');
+
   private readonly database: Database;
   private readonly events: AppEvents;
 
@@ -130,6 +132,9 @@ export class AgentAPI {
 
   async initialize() {
     await this.database.initialize();
+
+    this.logger.info('initialized');
+    this.logger.info('============');
   }
 
   watch() {

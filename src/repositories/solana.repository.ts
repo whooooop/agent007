@@ -63,10 +63,19 @@ export class SolanaRepository {
   async getAccountTokenSwaps(walletAddress: string, tokenAddress: string): Promise<SolanaAccountTokenSwapEntity[]> {
     return this.accountTokenSwapRepository
       .createQueryBuilder('swap')
+      .select([
+        'swap.signature',
+        'swap.account',
+        'swap.token_in',
+        'swap.token_out',
+        'swap.amount_in',
+        'swap.amount_out',
+        'swap.block_time'
+      ])
       .where('swap.account = :account', { account: walletAddress })
       .andWhere('(swap.token_in = :token OR swap.token_out = :token)', { token: tokenAddress })
       .orderBy('swap.block_time', 'DESC')
-      .getRawMany();
+      .getMany();
   }
 
   async setAccountTokenSwap(signature: string, data: Partial<SolanaAccountTokenSwapEntity>): Promise<SolanaAccountTokenSwapEntity> {

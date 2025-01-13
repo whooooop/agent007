@@ -2,8 +2,13 @@ import { Logger } from "../utils/logger";
 import { SolanaClient } from "../clients/solana.client";
 import { getAnotherTokenFromSwap, getTokenAccountAddress, solAddress } from "../helpers/token";
 import { SolanaRepository } from "../repositories/solana.repository";
-import chalk from "chalk";
-import { GetProgramAccountsResponse, ParsedTransactionWithMeta } from "@solana/web3.js";
+import * as chalk from 'chalk';
+import {
+  GetProgramAccountsResponse,
+  ParsedInnerInstruction,
+  ParsedInstruction,
+  ParsedTransactionWithMeta
+} from "@solana/web3.js";
 import { absBigInt } from "../helpers/bigint";
 import { SolanaSwapInfo } from "../types/solanaSwapInfo";
 import { SolanaTokenMetadataEntity } from "../entities/solanaTokenMetadata.entity";
@@ -77,7 +82,7 @@ export class SolanaServce {
   async indexTx(signature: string): Promise<{ signature: string, swapInfo: SolanaSwapInfo | null }> {
     const transaction = await this.solanaClient.getParsedTransaction(signature);
     const signer = this.getTxSigner(transaction);
-    const swapInfo = this.getSwapInfo(transaction);
+    const swapInfo = await this.getSwapInfo(transaction);
 
     if (swapInfo) {
       this.logger.info(
@@ -100,7 +105,7 @@ export class SolanaServce {
   }
 
   async indexToken(mintAddress: string): Promise<SolanaTokenMetadataEntity | null> {
-    const tokenMetadata = await this.solanaClient.getTokensMetadata(mintAddress);
+    const tokenMetadata = await this.solanaClient.getTokenMetadata(mintAddress);
     if (tokenMetadata) {
       await this.solanaRepository.setTokenMetadata(mintAddress, tokenMetadata);
       return tokenMetadata;
@@ -157,7 +162,7 @@ export class SolanaServce {
   async getIndexedAccountTokenSwaps(walletAddress: string, tokenAddress: string): Promise<{ swaps: SolanaAccountTokenSwapEntity[]; tokens: Record<string, SolanaTokenMetadataEntity> }> {
     // Fetch token swap details from the repository
     const swaps = await this.solanaRepository.getAccountTokenSwaps(walletAddress, tokenAddress);
-
+    // getTokensFromSwaps
     // Extract unique token addresses from the swaps
     const tokensAddress = Array.from(new Set(swaps.flatMap(swap => [swap.token_in, swap.token_out])));
 
@@ -199,8 +204,9 @@ export class SolanaServce {
     return transaction.transaction.message.accountKeys.find(({signer}) => signer).pubkey.toString();
   }
 
-  private getSwapInfo(transaction: ParsedTransactionWithMeta): SolanaSwapInfo | null {
+  private async getSwapInfo(transaction: ParsedTransactionWithMeta): Promise<SolanaSwapInfo | null> {
     const signer = this.getTxSigner(transaction);
+    // console.log(JSON.stringify(transaction));
 
     if (!signer) return null;
 
@@ -249,6 +255,24 @@ export class SolanaServce {
       }
     }
 
+    // this.logger.debug('signerBalances', signerBalances);
+    // this.logger.debug('otherSideBalances', otherSideBalances);
+
+    const excludeTokens = transaction.meta.innerInstructions.reduce((result: { mint: string, amount: bigint }[], instruction: ParsedInnerInstruction) => {
+      instruction.instructions.forEach((item: ParsedInstruction) => {
+        if (
+          (item.parsed?.type === 'burn' && item.parsed?.info) ||
+          (item.parsed?.type === 'mintTo' && item.parsed?.info.account !== signer)
+        ) {
+          result.push({
+            mint: item.parsed.info.mint,
+            amount: BigInt(item.parsed.info.amount)
+          });
+        }
+      });
+      return result;
+    }, []);
+
     // Calculate token changes
     const signerChangesByToken = signerBalances.reduce((result: Record<string, bigint>, balance) => {
       result[balance.mint] = (result[balance.mint] || 0n) + balance.change;
@@ -260,11 +284,20 @@ export class SolanaServce {
       return result;
     }, {});
 
-    this.logger.debug('signerChangesByToken', signerChangesByToken);
-    this.logger.debug('otherSideChangesByToken', otherSideChangesByToken);
+    excludeTokens.forEach(({ mint, amount }) => {
+      if (otherSideChangesByToken[mint]) {
+        delete otherSideChangesByToken[mint];
+      }
+    });
 
-    const signerSwapTokens = Object.keys(signerChangesByToken);
-    const otherSideSwapTokens = Object.keys(otherSideChangesByToken).filter((mint) => otherSideChangesByToken[mint] !== 0n);
+    // this.logger.debug('signer changes by token', signerChangesByToken);
+    // this.logger.debug('other side changes by token', otherSideChangesByToken);
+
+    const signerSwapTokens = Object.keys(signerChangesByToken).filter((mint) => signerChangesByToken[mint] !== BigInt(0));
+    const otherSideSwapTokens = Object.keys(otherSideChangesByToken).filter((mint) => otherSideChangesByToken[mint] !== BigInt(0));
+
+    // console.log('signerSwapTokens', signerSwapTokens)
+    // console.log('otherSideSwapTokens', otherSideSwapTokens)
 
     if (signerSwapTokens.length === 1 && otherSideSwapTokens.length === 2) {
       const swapTokenMint = signerSwapTokens[0];

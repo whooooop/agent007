@@ -14,14 +14,19 @@ let excludeContexts: Set<string> = new Set([]);
 
 export class Logger {
   private readonly context: string;
+  private readonly logLevels: Set<string>;
 
   /**
    * Initializes the Logger with the context of the calling class.
    *
    * @param {string} context - The name of the context using the logger.
+   * @param {LogLevel[]} logLevels
    */
-  constructor(context: string) {
+  constructor(context: string, logLevels?: LogLevel[]) {
     this.context = context;
+    if (logLevels) {
+      this.logLevels = new Set(logLevels);
+    }
   }
 
   /**
@@ -32,6 +37,12 @@ export class Logger {
    */
   static set levels (logLevels: LogLevel[]) {
     enabledLogLevels = new Set(logLevels);
+  }
+
+  static get levels (): Set<LogLevel> {
+    return new Set(
+      Array.from(enabledLogLevels)
+    );
   }
 
 
@@ -87,7 +98,8 @@ export class Logger {
    * @returns {boolean} True if the level is enabled, false otherwise.
    */
   private shouldLog(level: LogLevel): boolean {
-    return enabledLogLevels.has(level) && !excludeContexts.has(this.context);
+    return (this.logLevels ? this.logLevels.has(level) : enabledLogLevels.has(level))
+      && !excludeContexts.has(this.context);
   }
 
   /**
