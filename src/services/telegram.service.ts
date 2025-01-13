@@ -6,6 +6,7 @@ import { TelegramAccountWatchEntity } from "../entities/telegramAccountWatch.ent
 import { EventsRegistry } from "../config/events.config";
 import * as messageMethods from "telegram/client/messages";
 import { TelegramNotificationEntity } from "../entities/telegramNotification.entity";
+import input from "input";
 
 export class TelegramService {
   private readonly logger = new Logger('TelegramService');
@@ -86,3 +87,17 @@ export class TelegramService {
     return this.telegramRepository.getNotificationsByAccountWatchId(accountInfo.id);
   }
 }
+
+// async install() {
+//   const useTelegramClientApp = await input.confirm('Use Telegram client APP')
+//   if (useTelegramClientApp) {
+//     console.log('Create your app here', 'https://my.telegram.org/auth')
+//     const config = await this.storageTelegram.read('config', {})
+//     await this.storageTelegram.write('config', {
+//       apiId: await input.text('Telegram API ID:', {default: config.apiId}),
+//       apiHash: await input.text('Telegram API Hash:', {default: config.apiHash}),
+//       logChatId: await input.text('Telegram log Chat id:', {default: config.logChatId})
+//     })
+//     await this.client.auth()
+//   }
+// }
