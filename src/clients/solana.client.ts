@@ -69,9 +69,7 @@ export class SolanaClient {
 
   async getSignaturesForAddress(address: string, options?: SignatureOptions): Promise<Array<ConfirmedSignatureInfo>> {
     const accountPublicKey = new PublicKey(address);
-    const signatures = await this.request<Promise<Array<ConfirmedSignatureInfo>>>('getSignaturesForAddress', accountPublicKey, options, 'finalized');
-    this.logger.info('received signatures', signatures?.length);
-    return signatures;
+    return this.request<Promise<Array<ConfirmedSignatureInfo>>>('getSignaturesForAddress', accountPublicKey, options, 'finalized');
   }
 
   async getTokensMetadata(mintAddress: string): Promise<SolanaTokenMetadataEntity | null> {

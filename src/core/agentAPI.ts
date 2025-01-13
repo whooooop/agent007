@@ -18,9 +18,15 @@ import { TelegramNotificationEntity } from "../entities/telegramNotification.ent
 import { TelegramService } from "../services/telegram.service";
 import { TelegramManager } from "../managers/telegram.manager";
 import { SolanaNotificationEntity } from "../entities/solanaNotification.entity";
+import { AppTelegramClientConfig } from "../types/telegramClientConfig.types";
 
+interface LoggerConfig {
+  levels?: LogLevel[];
+  excludeContexts?: []
+}
 export interface AgentAPIConfig {
-  logLevels?: LogLevel[];
+  logger?: LoggerConfig
+  telegram: AppTelegramClientConfig
 }
 
 export class AgentAPI {
@@ -43,8 +49,9 @@ export class AgentAPI {
   private readonly telegramManager: TelegramManager;
 
   constructor(config: AgentAPIConfig) {
-    if (config.logLevels) {
-      Logger.levels = config.logLevels;
+    if (config.logger) {
+      config.logger.levels && (Logger.levels = config.logger.levels);
+      config.logger.excludeContexts && (Logger.excludeContexts = config.logger.excludeContexts);
     }
 
     /**
@@ -68,12 +75,7 @@ export class AgentAPI {
      * Bootstrap Clients
      */
     this.solanaClient = new SolanaClient();
-    this.telegramClient = new AppTelegramClient({
-      apiId: 0,
-      apiHash: '',
-      session: '',
-      logChatId: ''
-    });
+    this.telegramClient = new AppTelegramClient(config.telegram);
 
     /**
      * Bootstrap Repositories
@@ -133,5 +135,13 @@ export class AgentAPI {
   watch() {
     this.solanaManager.watchAccounts();
     this.telegramManager.watchAccounts();
+  }
+
+  getSolanaServce () {
+    return this.solanaServce
+  }
+
+  getTelegramService () {
+    return this.telegramService
   }
 }

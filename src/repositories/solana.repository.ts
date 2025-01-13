@@ -34,7 +34,7 @@ export class SolanaRepository {
   }
 
   async addAccountToWatch(accountAddress: string, lastSignature: string): Promise<SolanaAccountWatchEntity> {
-    this.logger.info('add account to watch', accountAddress, lastSignature);
+    this.logger.debug('add account to watch', accountAddress, lastSignature);
     return this.accountWatchRepository.save({
       account: accountAddress,
       last_signature: lastSignature

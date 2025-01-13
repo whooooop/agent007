@@ -30,7 +30,8 @@ export const SolanaNotificationEntity = new EntitySchema<SolanaNotificationEntit
       length: 20,
     },
     event: {
-      type: 'enum',
+      type: 'varchar',
+      length: 10,
       enum: SolanaNotificationEvent
     },
   },

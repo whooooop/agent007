@@ -53,7 +53,6 @@ export class SolanaManager {
   private async accountSwapsStat(accountAddress: string) {
     // Fetch token accounts owned by the account
     const tokens = await this.solanaService.getAccountTokens(accountAddress);
-
     const { txsIn, txsOut } = await this.solanaService.getAccountSolSwaps(accountAddress);
 
     // Calculate total incoming and outgoing SOL amounts
@@ -67,11 +66,16 @@ export class SolanaManager {
       profit,
       tokens
     );
-    // const notifications = await this.solanaService.getNotifications(accountAddress, SolanaNotificationEvent.STAT);
-    // this.notificationService.sendMessage(message);
+    const notifications = await this.solanaService.getNotifications(accountAddress, SolanaNotificationEvent.STAT);
+
+    for (const { chat_id } of notifications) {
+      await this.notificationService.sendMessage(chat_id, message);
+    }
   }
 
   private async onAccountNewSwap({ account, mint }: SolanaAccountNewSwapPayload) {
+    this.logger.info('new swap from', account);
+
     const { swaps, tokens} = await this.solanaService.getIndexedAccountTokenSwaps(account, mint);
     const message = await swapTemplate(account, mint, swaps, tokens);
     const notifications = await this.solanaService.getNotifications(account, SolanaNotificationEvent.SWAP);

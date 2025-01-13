@@ -31,22 +31,34 @@ export class TelegramService {
   }
 
   async addAccountToWatch(username: string, chat_id: string, notification_chat_id: string): Promise<TelegramAccountWatchEntity> {
-    const accountInfo = await this.telegramRepository.getOrCreateAccountWatchInfo(username, chat_id, null);
+    const accountInfo = await this.telegramRepository.findAccountWatchInfo(username, chat_id);
+
+    if (!accountInfo) {
+      await this.telegramRepository.addAccountWatchInfo(username, chat_id, null);
+    }
+
     await this.telegramRepository.addNotification(accountInfo.id, notification_chat_id);
+
+    this.logger.info('account added successfully', username);
+
     return accountInfo;
   }
 
   async findNewMessageByAccount(telegram_account_watch_id: string): Promise<void> {
     const accountInfo = await this.telegramRepository.getAccountWatchInfoById(telegram_account_watch_id);
+
+    this.logger.verbose('find new message by', accountInfo);
+
     if (!accountInfo) {
       this.logger.error('account not found', telegram_account_watch_id);
       return;
     }
 
-    let filter: Partial<messageMethods.IterMessagesParams> = { fromUser: '@' + accountInfo.username, limit: 10 }
+    let filter: Partial<messageMethods.IterMessagesParams> = { fromUser: '@' + accountInfo.username, limit: 10 };
     if (accountInfo.last_message_id) {
       filter.minId = accountInfo.last_message_id;
     }
+
     const messages = await this.telegramClient.getMessages(accountInfo.chat_id, filter);
 
     for (const message of messages.reverse()) {

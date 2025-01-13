@@ -26,7 +26,7 @@ export class TelegramManager {
 
     this.appEvents.on(EventsRegistry.TelegramAccountNewMessageEvent, (payload) => this.onNewMessage(payload));
 
-    this.watchAccountsLoop = new Loop(40000, () => this.watchAccountsHandler())
+    this.watchAccountsLoop = new Loop(10000, () => this.watchAccountsHandler())
 
     this.logger.info('manager created');
   }
@@ -37,6 +37,7 @@ export class TelegramManager {
 
   private async watchAccountsHandler() {
     const accounts = await this.telegramService.getAccountsToWatch();
+
     for (const { id, username } of accounts) {
       try {
         await this.telegramService.findNewMessageByAccount(id);
@@ -47,6 +48,8 @@ export class TelegramManager {
   }
 
   private async onNewMessage({ message, username, chat_id: fromChatId }: TelegramAccountNewMessagePayload) {
+    this.logger.info('new message from', username);
+
     const notifications = await this.telegramService.getTelegramNotifications(username, fromChatId);
 
     for (const { chat_id } of notifications) {

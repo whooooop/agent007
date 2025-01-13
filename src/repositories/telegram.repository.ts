@@ -40,16 +40,10 @@ export class TelegramRepository {
     return this.telegramAccountWatchRepository.find();
   }
 
-  async getOrCreateAccountWatchInfo(username: string, chat_id: string, last_message_id: number | null): Promise<TelegramAccountWatchEntity> {
-    this.logger.info('create or get account to watch', username, chat_id);
-    await this.telegramAccountWatchRepository.upsert(
-      { username, chat_id, last_message_id },
-      ['username', 'chat_id']
-    );
-    const accountInfo = await this.telegramAccountWatchRepository.findOne({
-      where: { username, chat_id }
-    })
-    return accountInfo;
+  async addAccountWatchInfo(username: string, chat_id: string, last_message_id: number | null): Promise<TelegramAccountWatchEntity> {
+    this.logger.debug('add account to watch', username, chat_id);
+
+    return this.telegramAccountWatchRepository.save({ username, chat_id, last_message_id });
   }
 
   async addNotification(telegram_account_watch_id: string, chat_id: string) {

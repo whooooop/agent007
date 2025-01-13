@@ -7,20 +7,21 @@
 
 import * as chalk from 'chalk'
 
-export type LogLevel = 'info' | 'error' | 'debug' | 'warn';
+export type LogLevel = 'info' | 'error' | 'warn' | 'debug' | 'verbose';
 
 let enabledLogLevels: Set<LogLevel> = new Set(['info', 'error']);
+let excludeContexts: Set<string> = new Set([]);
 
 export class Logger {
-  private readonly className: string;
+  private readonly context: string;
 
   /**
    * Initializes the Logger with the context of the calling class.
    *
-   * @param {string} className - The name of the class using the logger.
+   * @param {string} context - The name of the context using the logger.
    */
-  constructor(className: string) {
-    this.className = className;
+  constructor(context: string) {
+    this.context = context;
   }
 
   /**
@@ -31,6 +32,11 @@ export class Logger {
    */
   static set levels (logLevels: LogLevel[]) {
     enabledLogLevels = new Set(logLevels);
+  }
+
+
+  static set excludeContexts (contexts: string[]) {
+    excludeContexts = new Set(contexts);
   }
 
   /**
@@ -55,7 +61,23 @@ export class Logger {
    * @returns {string} The formatted class name.
    */
   private formatClassName(): string {
-    return chalk.hex('#FFA500')(`[${this.className}]`);
+    return chalk.hex('#FFA500')(`[${this.context}]`);
+  }
+
+  private formatLogLevel(level: LogLevel): string {
+    let result = level.padEnd(7).toUpperCase();
+
+    if (level === 'info') {
+      return chalk.blue(result);
+    } else if (level === 'error') {
+      return chalk.red(result);
+    } else if (level === 'debug') {
+      return chalk.magenta(result);
+    } else if (level === 'warn') {
+      return chalk.yellow(result);
+    } else if (level === 'verbose') {
+      return chalk.cyan(result);
+    }
   }
 
   /**
@@ -65,7 +87,7 @@ export class Logger {
    * @returns {boolean} True if the level is enabled, false otherwise.
    */
   private shouldLog(level: LogLevel): boolean {
-    return enabledLogLevels.has(level);
+    return enabledLogLevels.has(level) && !excludeContexts.has(this.context);
   }
 
   /**
@@ -75,7 +97,7 @@ export class Logger {
    */
   public info(...args: any[]): void {
     if (this.shouldLog('info')) {
-      console.log(`${this.formatTime()} ${chalk.blue('INFO')} ${this.formatClassName()}`, ...args);
+      console.log(`${this.formatTime()} ${this.formatLogLevel('info')} ${this.formatClassName()}`, ...args);
     }
   }
 
@@ -86,7 +108,7 @@ export class Logger {
    */
   public error(...args: any[]): void {
     if (this.shouldLog('error')) {
-      console.error(`${this.formatTime()} ${chalk.red('ERROR')} ${this.formatClassName()}`, ...args);
+      console.error(`${this.formatTime()} ${this.formatLogLevel('error')} ${this.formatClassName()}`, ...args);
     }
   }
 
@@ -97,7 +119,7 @@ export class Logger {
    */
   public debug(...args: any[]): void {
     if (this.shouldLog('debug')) {
-      console.debug(`${this.formatTime()} ${chalk.green('DEBUG')} ${this.formatClassName()}`, ...args);
+      console.debug(`${this.formatTime()} ${this.formatLogLevel('debug')} ${this.formatClassName()}`, ...args);
     }
   }
 
@@ -108,7 +130,18 @@ export class Logger {
    */
   public warn(...args: any[]): void {
     if (this.shouldLog('warn')) {
-      console.warn(`${this.formatTime()} ${chalk.yellow('WARN')} ${this.formatClassName()}`, ...args);
+      console.warn(`${this.formatTime()} ${this.formatLogLevel('warn')} ${this.formatClassName()}`, ...args);
+    }
+  }
+
+  /**
+   * Logs a verbose message.
+   *
+   * @param {...any[]} args - The arguments to log.
+   */
+  public verbose(...args: any[]): void {
+    if (this.shouldLog('verbose')) {
+      console.warn(`${this.formatTime()} ${this.formatLogLevel('verbose')} ${this.formatClassName()}`, ...args);
     }
   }
 }
