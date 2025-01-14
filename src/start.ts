@@ -23,7 +23,7 @@ import { SolanaNotificationEvent } from "./entities/solanaNotification.entity";
     // }
   });
 
-  // await agentAPI.getTelegramService().addAccountToWatch('dimmao', '-1001369370434', '-1001369370434')
+  // await agentAPI.getTelegramService().addAccountToWatch('dimmao', '-1001369370434', '-1002376488914')
   // await agentAPI.getSolanaServce().addNotification('GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z', '-1002376488914', SolanaNotificationEvent.SWAP);
 
   // await agentAPI.getSolanaServce().indexTx('3Fnws12yvtyEkGbSRQpLnAuV4RecgMpuJgMbb1zmduS2DMEkyQgQaWPnUzmFtcekLvN3KjVkE2KZFQ9uTb1z6GmT')

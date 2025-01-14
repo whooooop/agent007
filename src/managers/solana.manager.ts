@@ -46,7 +46,7 @@ export class SolanaManager {
       try {
         await this.solanaService.findAccountNewTxs(account);
       } catch (e) {
-        this.logger.error('Fail findAccountNewTxs', account, e);
+        this.logger.error('fail find account new txs', account, e);
       }
     }
   }

@@ -60,6 +60,7 @@ export class TelegramRepository {
   }
 
   async updateLastMessageId(username: string, chat_id: string, last_message_id: number): Promise<void> {
+    this.logger.verbose('update last message id', username, chat_id, last_message_id);
     await this.telegramAccountWatchRepository.update(
       { username, chat_id },
       { last_message_id }

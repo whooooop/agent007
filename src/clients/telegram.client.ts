@@ -6,6 +6,7 @@ import input from 'input';
 import * as messageMethods from "telegram/client/messages";
 import { Api } from "telegram/tl";
 import { AppTelegramClientConfig } from "../types/telegramClientConfig.types";
+
 /**
  * TelegramClientService handles the connection and interactions with the Telegram API.
  * It manages session persistence, authentication, and common Telegram operations like fetching dialogs and forwarding messages.
@@ -36,6 +37,8 @@ export class AppTelegramClient {
     // Initialize the Telegram client
     this.connection = new TelegramClient(stringSession, this.config.apiId, this.config.apiHash, {
       connectionRetries: 1000,
+      retryDelay: 5000,
+      autoReconnect: true,
       // @ts-ignore
       baseLogger: new Logger('NativeTelegramClient', levels) as TgLogger
     });

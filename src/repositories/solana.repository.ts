@@ -42,6 +42,7 @@ export class SolanaRepository {
   }
 
   async updateLastSignatureForAccountToWatch(accountAddress: string, lastSignature: string): Promise<SolanaAccountWatchEntity> {
+    this.logger.verbose('update last signature for account', { accountAddress, lastSignature });
     return this.accountWatchRepository.save({
       account: accountAddress,
       last_signature: lastSignature,
