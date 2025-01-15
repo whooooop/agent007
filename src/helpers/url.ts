@@ -25,8 +25,8 @@ export function getSolscanTokenUrl(mintAddress: string): string {
   return `https://solscan.io/token/${mintAddress}`;
 }
 
-export function getJupSwapUrl(mintAddress: string): string {
-  return `https://jup.ag/swap/SOL-${mintAddress}?referrer=91tabVGJ5NzFQSTigN1Noz2Qo8Vdd8fzw2gGJ5RTgWK1&feeBps=10`;
+export function getJupSwapUrl(mintAddress: string, fee = 10): string {
+  return `https://jup.ag/swap/SOL-${mintAddress}?referrer=91tabVGJ5NzFQSTigN1Noz2Qo8Vdd8fzw2gGJ5RTgWK1&feeBps=${fee}`;
 }
 
 export function getRaydiumSwapUrl(outputMint: string, inputMint: string = 'sol'): string {

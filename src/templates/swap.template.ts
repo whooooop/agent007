@@ -23,10 +23,9 @@ export async function swapTemplate(
   const tokenAccountUrl = await getTokenAccountUrl(accountAddress, tokenSwap);
   const dexscreenerUrl = getDexscreenerUrl(tokenSwap, accountAddress);
   const solscanTokenUrl = getSolscanTokenUrl(tokenSwap);
-  const jupUrl = getJupSwapUrl(tokenSwap);
-  const raydiumUrl = getRaydiumSwapUrl(tokenSwap);
 
   let message = '';
+  let swapType: 'buy' | 'sell';
 
   if (swaps.length === 1) {
     message += `🆕 `;
@@ -59,8 +58,17 @@ export async function swapTemplate(
     const amountIn = applyDecimalsBigInt(swap.amount_in, tokenIn.decimals);
     const amountOut = applyDecimalsBigInt(swap.amount_out, tokenOut.decimals);
     const txUrl = getSolscanTxUrl(swap.signature);
+
+    if (swapType) {
+      swapType = (isBuy ? 'buy' : 'sell');
+    }
+
     message += icon + `<a href="${ txUrl }">${ date }</a> ${ amountOut } <b>${ tokenOut.symbol }</b> for ${ amountIn } <b>${ tokenIn.symbol }</b>` + NW;
   }
+
+  const fee = swapType === 'sell' ? 100 : 10;
+  const jupUrl = getJupSwapUrl(tokenSwap, fee);
+  const raydiumUrl = getRaydiumSwapUrl(tokenSwap);
 
   message += `<a href="${ tokenAccountUrl }">All swaps</a>` + NW;
   message += `---` + NW + NW;
@@ -69,9 +77,9 @@ export async function swapTemplate(
 
   message += NW;
 
-  message += `<a href="${ dexscreenerUrl }">Dexscreener</a>` + NW;
   message += `<a href="${ jupUrl }">Jupiter</a>` + NW;
-  message += `<a href="${ raydiumUrl }">Raydium</a>` + NW;
+  message += `<a href="${ dexscreenerUrl }">Dexscreener</a>` + NW;
+  // message += `<a href="${ raydiumUrl }">Raydium</a>` + NW;
 
   return message;
 }
