@@ -19,14 +19,20 @@ import { TelegramService } from "../services/telegram.service";
 import { TelegramManager } from "../managers/telegram.manager";
 import { SolanaNotificationEntity } from "../entities/solanaNotification.entity";
 import { AppTelegramClientConfig } from "../types/telegramClientConfig.types";
+import { SolanaWallet, SolanaWalletConfig } from "../wallets/solana.wallet";
 
 interface LoggerConfig {
   levels?: LogLevel[];
   excludeContexts?: []
 }
+interface AppWalletsConfig {
+  solana: SolanaWalletConfig
+}
+
 export interface AgentAPIConfig {
   logger?: LoggerConfig
-  telegram: AppTelegramClientConfig
+  telegram: AppTelegramClientConfig,
+  wallets?: AppWalletsConfig
 }
 
 export class AgentAPI {
@@ -37,6 +43,8 @@ export class AgentAPI {
 
   private readonly solanaClient: SolanaClient;
   private readonly telegramClient: AppTelegramClient;
+
+  private readonly solanaWallet: SolanaWallet;
 
   private readonly solanaRepository: SolanaRepository;
   private readonly telegramRepository: TelegramRepository;
@@ -78,6 +86,10 @@ export class AgentAPI {
      */
     this.solanaClient = new SolanaClient();
     this.telegramClient = new AppTelegramClient(config.telegram);
+
+    if (config.wallets?.solana) {
+      this.solanaWallet = new SolanaWallet(config.wallets.solana);
+    }
 
     /**
      * Bootstrap Repositories
@@ -135,6 +147,11 @@ export class AgentAPI {
 
     this.logger.info('initialized');
     this.logger.info('============');
+
+    // const r = await this.solanaWallet.swapBySol('4T54PGF4gAU75NL9j2GHvrVbR6u5zjyJE4zGuJbkpump', 0.001);
+    // if (r.isSuccess()) {
+    //   console.log(`https://solscan.io/tx/${r.getValue()}`);
+    // }
   }
 
   watch() {

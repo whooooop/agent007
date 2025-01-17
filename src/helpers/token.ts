@@ -1,6 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { getAssociatedTokenAddress } from '@solana/spl-token';
-
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 export const solAddress: string = 'So11111111111111111111111111111111111111112';
 
 interface Swap {
@@ -24,8 +23,12 @@ export async function getTokenAccountAddress(accountAddress: string, tokenMintAd
   const accountPublicKey = new PublicKey(accountAddress);
   const tokenMintPublicKey = new PublicKey(tokenMintAddress);
 
-  const tokenAccount = await getAssociatedTokenAddress(tokenMintPublicKey, accountPublicKey);
-  return tokenAccount.toBase58();
+  const [address] = PublicKey.findProgramAddressSync(
+    [accountPublicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), tokenMintPublicKey.toBuffer()],
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+  );
+
+  return address.toBase58();
 }
 
 export function getTokensFromSwaps(swaps: SwapDetails[]): string[] {

@@ -14,6 +14,15 @@ import { SolanaNotificationEvent } from "./entities/solanaNotification.entity";
       session: process.env.TELEGRAM_CLIENT_SESSION,
       logChatId: process.env.TELEGRAM_CLIENT_LOG_CHAT_ID,
     },
+
+    wallets: {
+      solana: {
+        endpointUrl: 'https://api.mainnet-beta.solana.com',
+        cluster: 'mainnet-beta',
+        privateKey: process.env.SOLANA_PRIVATE_KEY
+      }
+    },
+
     // x: {
     //   apiKey: process.env.X_API_KEY,
     //   apiSecretKey: process.env.X_API_SECRET_KEY,

@@ -18,12 +18,14 @@
     "publish": "npm publish --access public"
   },
   "dependencies": {
+    "@jup-ag/api": "^6.0.36",
     "@metaplex-foundation/js": "^0.20.1",
     "@metaplex-foundation/mpl-token-metadata": "^3.3.0",
     "@solana/spl-token": "^0.4.9",
     "@solana/spl-token-registry": "^0.2.4574",
     "@solana/web3.js": "^1.98.0",
     "axios": "^1.7.9",
+    "bs58": "^6.0.0",
     "chalk": "^4.1.2",
     "dotenv": "^16.4.7",
     "input": "^1.0.1",
