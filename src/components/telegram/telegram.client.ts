@@ -1,11 +1,11 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
-import { Logger } from '../utils/logger';
+import { Logger } from '../../utils/logger';
 import { Logger as TgLogger } from "telegram/extensions";
 import input from 'input';
 import * as messageMethods from "telegram/client/messages";
 import { Api } from "telegram/tl";
-import { AppTelegramClientConfig } from "../types/telegramClientConfig.types";
+import { AppTelegramClientConfig } from "./types/telegramClientConfig.types";
 
 /**
  * TelegramClientService handles the connection and interactions with the Telegram API.

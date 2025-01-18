@@ -1,44 +1,58 @@
-import { Logger } from "../utils/logger";
-import { AppTelegramClient } from "../clients/telegram.client";
-import { TelegramRepository } from "../repositories/telegram.repository";
-import { AppEvents } from "../core/event";
-import { TelegramAccountWatchEntity } from "../entities/telegramAccountWatch.entity";
-import { EventsRegistry } from "../config/events.config";
+import { Logger } from "../../utils/logger";
+import { AppTelegramClient } from "./telegram.client";
+import { TelegramRepository } from "../../repositories/telegram.repository";
+import { TelegramAccountWatchEntity } from "../../entities/telegramAccountWatch.entity";
 import * as messageMethods from "telegram/client/messages";
-import { TelegramNotificationEntity } from "../entities/telegramNotification.entity";
-import input from "input";
+import { TelegramNotificationEntity } from "../../entities/telegramNotification.entity";
+import { TelegramEvent } from "./types/telegram.events";
+import { Loop } from "../../utils/loop";
 
 export class TelegramService {
-  private readonly logger = new Logger('TelegramService');
+  private readonly logger = new Logger(TelegramService.name);
 
-  private readonly appEvents: AppEvents;
   private readonly telegramClient: AppTelegramClient;
   private readonly telegramRepository: TelegramRepository;
 
+  private readonly usernameMessageWatch: Map<string, Set<(payload: TelegramEvent.Message.Payload) => {}>> = new Map();
+
   constructor(
-    appEvents: AppEvents,
     telegramRepository: TelegramRepository,
     telegramClient: AppTelegramClient,
   ) {
-    this.appEvents = appEvents;
     this.telegramClient = telegramClient;
     this.telegramRepository = telegramRepository;
+
+    const loop = new Loop(50000, () => this.watchUsernameMessagesHandler());
+    loop.run();
 
     this.logger.info('service created');
   }
 
-  getAccountsToWatch(): Promise<TelegramAccountWatchEntity[]> {
-    return this.telegramRepository.getAccountsWatchInfo();
+  async watchUsernameMessages (username: string, chatId: string, handler: ((payload: TelegramEvent.Message.Payload) => {})){
+    const { id } = await this.addAccountToWatch(username, chatId);
+
+    if (!this.usernameMessageWatch.has(id)) {
+      this.usernameMessageWatch.set(id, new Set());
+    }
+    this.usernameMessageWatch.get(id).add(handler);
   }
 
-  async addAccountToWatch(username: string, chat_id: string, notification_chat_id: string): Promise<TelegramAccountWatchEntity> {
+  async watchUsernameMessagesHandler() {
+    for (const id of Object.keys(this.usernameMessageWatch)) {
+      try {
+        await this.findNewMessageByAccount(id);
+      } catch (e) {
+        this.logger.error('fail find new messages', e);
+      }
+    }
+  }
+
+  async addAccountToWatch(username: string, chat_id: string): Promise<TelegramAccountWatchEntity> {
     let accountInfo = await this.telegramRepository.findAccountWatchInfo(username, chat_id);
 
     if (!accountInfo) {
       accountInfo = await this.telegramRepository.addAccountWatchInfo(username, chat_id, null);
     }
-
-    await this.telegramRepository.addNotification(accountInfo.id, notification_chat_id);
 
     this.logger.info('account added successfully', username);
 
@@ -63,19 +77,24 @@ export class TelegramService {
     const messages = await this.telegramClient.getMessages(accountInfo.chat_id, filter);
 
     for (const message of messages.reverse()) {
-      await this.appEvents.emit(EventsRegistry.TelegramAccountNewMessageEvent, {
-        username: accountInfo.username,
-        chat_id: accountInfo.chat_id,
-        message: {
-          id: message.id,
-          replyToMsgId: message.replyTo?.replyToMsgId
-        }
-      });
       await this.telegramRepository.updateLastMessageId(
         accountInfo.username,
         accountInfo.chat_id,
         message.id
       );
+
+      if (this.usernameMessageWatch.has(telegram_account_watch_id)) {
+        for (const handler of this.usernameMessageWatch.get(telegram_account_watch_id)) {
+          handler({
+            username: accountInfo.username,
+            chat_id: accountInfo.chat_id,
+            message: {
+              id: message.id,
+              replyToMsgId: message.replyTo?.replyToMsgId
+            }
+          });
+        }
+      }
     }
   }
 

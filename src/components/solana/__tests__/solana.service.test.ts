@@ -14,11 +14,11 @@ const swapOrca = JSON.parse(fs.readFileSync(__dirname + '/mocks/swapOrca.json', 
 const swapPumpfun = JSON.parse(fs.readFileSync(__dirname + '/mocks/swapPumpfun.json', 'utf-8')) as ParsedTransactionWithMeta;
 
 import { SolanaServce } from "../solana.servce";
-import { AppEvents } from "../../core/event";
-import { SolanaRepository } from "../../repositories/solana.repository";
-import { SolanaClient } from "../../clients/solana.client";
+import { AppEvents } from "../../../core/event";
+import { SolanaRepository } from "../../../repositories/solana.repository";
+import { SolanaClient } from "../solana.client";
 import { ParsedTransactionWithMeta } from "@solana/web3.js";
-import { Logger } from "../../utils/logger";
+import { Logger } from "../../../utils/logger";
 
 let solanaService: SolanaServce;
 let appEvents: AppEvents;

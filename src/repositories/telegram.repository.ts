@@ -36,10 +36,6 @@ export class TelegramRepository {
     });
   }
 
-  getAccountsWatchInfo(): Promise<TelegramAccountWatchEntity[]> {
-    return this.telegramAccountWatchRepository.find();
-  }
-
   async addAccountWatchInfo(username: string, chat_id: string, last_message_id: number | null): Promise<TelegramAccountWatchEntity> {
     this.logger.debug('add account to watch', username, chat_id);
 

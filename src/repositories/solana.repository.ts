@@ -49,10 +49,6 @@ export class SolanaRepository {
     });
   }
 
-  async getAccountsToWatch(): Promise<SolanaAccountWatchEntity[]> {
-    return this.accountWatchRepository.find();
-  }
-
   async getAccountWatchInfo(accountAddress): Promise<SolanaAccountWatchEntity> {
     return this.accountWatchRepository.findOne({
       where: {

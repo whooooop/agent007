@@ -6,6 +6,7 @@ const sleep = promisify(setTimeout);
  * Represents a function that performs a request and returns a Promise.
  */
 type RequestFunction = () => Promise<any>;
+type RetryRuleFunction = (e: Error) => Promise<boolean>;
 
 /**
  * @class RequestStackHelper
@@ -17,22 +18,17 @@ export class RequestStackHelper {
   private stack: Array<() => Promise<void>>;
   private interval: number;
   private isRunning: boolean;
-  private maxRetries: number;
   private retryDelay: number;
 
   /**
    * Initializes the RequestStackHelper with the specified configuration.
    *
    * @param {number} [interval=5000] - The interval (in milliseconds) between executing requests.
-   * @param {number} [maxRetries=50] - The maximum number of retries for a failed request.
-   * @param {number} [retryDelay=5000] - The base delay (in milliseconds) for retrying failed requests.
    */
-  constructor(interval: number = 5000, maxRetries: number = 50, retryDelay: number = 5000) {
+  constructor(interval: number = 5000) {
     this.stack = [];
     this.interval = interval;
     this.isRunning = false;
-    this.maxRetries = maxRetries;
-    this.retryDelay = retryDelay;
   }
 
   /**
@@ -98,23 +94,39 @@ export class RequestStackHelper {
    */
   private async _executeWithRetry(requestFunction: RequestFunction): Promise<any> {
     let attempt = 0;
+    const retryDelay = Math.min(1000 * (attempt + 1), 1000 * 60 * 10);
 
-    while (attempt <= this.maxRetries) {
+    while (true) {
       try {
-        return await requestFunction();
+        const result = await requestFunction();
+        if (attempt !== 0) {
+          // console.log('OK');
+        }
+        return result;
       } catch (error: any) {
-        if (error?.response?.status === 429 || error?.message?.includes('429')) {
-          console.warn(
-            `Attempt ${attempt + 1} failed with 429. Retrying in ${this.retryDelay * (attempt + 1)} ms...`
-          );
-          await sleep(this.retryDelay * (attempt + 1));
+        if (
+          error?.response?.status === 429 ||
+          error?.message?.includes('429') ||
+          error?.cause?.errno === -3008 ||
+          error?.type === 'union' ||
+          error?.value?.error === "couldn't complete the request, try again later"
+        ) {
+
+          if(attempt > 5) {
+            console.warn(
+              `Attempt ${attempt + 1} failed. Retrying in ${retryDelay} ms...`
+            );
+            console.log('e', error)
+            console.log('value', error.value)
+            console.log('type', error.type)
+            console.log('cause', error.cause); // ENOTFOUND
+          }
+          await sleep(retryDelay);
           attempt++;
         } else {
           throw error; // If it's not a 429 error, throw it
         }
       }
     }
-
-    throw new Error(`Request failed after ${this.maxRetries} retries.`);
   }
 }

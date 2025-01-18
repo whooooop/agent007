@@ -1,47 +1,43 @@
-import { Logger } from "../utils/logger";
-import { SolanaClient } from "../clients/solana.client";
-import { getAnotherTokenFromSwap, getTokenAccountAddress, solAddress } from "../helpers/token";
-import { SolanaRepository } from "../repositories/solana.repository";
+import { Logger } from "../../utils/logger";
+import { SolanaClient } from "./solana.client";
+import { getAnotherTokenFromSwap, getTokenAccountAddress, solAddress } from "../../helpers/token";
+import { SolanaRepository } from "../../repositories/solana.repository";
 import * as chalk from 'chalk';
 import {
   GetProgramAccountsResponse,
   ParsedInnerInstruction,
   ParsedInstruction,
-  ParsedTransactionWithMeta
+  ParsedTransactionWithMeta, SignaturesForAddressOptions
 } from "@solana/web3.js";
-import { absBigInt } from "../helpers/bigint";
-import { SolanaSwapInfo } from "../types/solanaSwapInfo";
-import { SolanaTokenMetadataEntity } from "../entities/solanaTokenMetadata.entity";
-import { SolanaAccountTokenSwapEntity } from "../entities/solanaAccountTokenSwap.entity";
-import { AppEvents } from "../core/event";
-import { EventsRegistry } from "../config/events.config";
-import { SolanaAccountWatchEntity } from "../entities/solanaAccountWatch.entity";
-import { SolanaNotificationEntity, SolanaNotificationEvent } from "../entities/solanaNotification.entity";
+import { absBigInt } from "../../helpers/bigint";
+import { SolanaSwapInfo } from "./types/solanaSwapInfo";
+import { SolanaTokenMetadataEntity } from "../../entities/solanaTokenMetadata.entity";
+import { SolanaAccountTokenSwapEntity } from "../../entities/solanaAccountTokenSwap.entity";
+import { SolanaAccountWatchEntity } from "../../entities/solanaAccountWatch.entity";
+import { SolanaEvent } from "./types/solana.events";
+import { Loop } from "../../utils/loop";
 
 export class SolanaServce {
-  private readonly logger = new Logger('SolanaServce');
+  private readonly logger = new Logger(SolanaServce.name);
 
-  private readonly appEvents: AppEvents;
   private readonly solanaClient: SolanaClient;
   private readonly solanaRepository: SolanaRepository;
+  private readonly accountTxWatch: Map<string, Set<(payload: SolanaEvent.Tx.Payload) => {}>> = new Map();
 
   constructor(
-    appEvents: AppEvents,
     solanaRepository: SolanaRepository,
     solanaClient: SolanaClient
   ) {
-    this.appEvents = appEvents;
     this.solanaRepository = solanaRepository;
     this.solanaClient = solanaClient;
+
+    const loop = new Loop(60000, () => this.watchAccountsHandler());
+    loop.run();
 
     this.logger.info('service created');
   }
 
-  async getAccountsToWatch(): Promise<SolanaAccountWatchEntity[]> {
-    return this.solanaRepository.getAccountsToWatch();
-  }
-
-  async addAccountToWatch(account: string, notification_chat_id: string): Promise<SolanaAccountWatchEntity> {
+  private async addAccountToWatch(account: string): Promise<SolanaAccountWatchEntity> {
     const accountInfo = await this.solanaRepository.getAccountWatchInfo(account);
     if (accountInfo) {
       return accountInfo;
@@ -52,20 +48,26 @@ export class SolanaServce {
     return this.solanaRepository.addAccountToWatch(account, lastSignature);
   }
 
-  async addNotification(account: string, chat_id: string, event: SolanaNotificationEvent): Promise<void> {
-    const accountInfo = await this.solanaRepository.getAccountWatchInfo(account);
-    if (!accountInfo) {
-      this.logger.error('account is not tracked', account);
+  async watchAccountTx(accountAddress: string, handler: ((payload: SolanaEvent.Tx.Payload) => {})){
+    await this.addAccountToWatch(accountAddress);
+    if (!this.accountTxWatch.has(accountAddress)) {
+      this.accountTxWatch.set(accountAddress, new Set());
     }
-
-    await this.solanaRepository.addNotification(accountInfo.account, chat_id, event);
+    this.accountTxWatch.get(accountAddress).add(handler);
   }
 
-  getNotifications(account: string, event: SolanaNotificationEvent): Promise<SolanaNotificationEntity[]>{
-    return this.solanaRepository.getNotificationsByAccount(account, event);
+  async watchAccountsHandler() {
+    for (const account of Object.keys(this.accountTxWatch)) {
+      try {
+        await this.findAccountNewTxs(account);
+      } catch (e) {
+        this.logger.error('fail find account new txs', account, e);
+      }
+    }
   }
 
   async indexAccountToken(accountAddress: string, mintAddress: string) {
+    this.logger.debug('index account token', accountAddress);
     const accountTokenAddress = await getTokenAccountAddress(accountAddress, mintAddress);
     const txs = await this.solanaClient.getSignaturesForAddress(accountTokenAddress, { limit: 500 });
     const signatures: string[] = txs.map(({ signature }) => signature);
@@ -74,14 +76,15 @@ export class SolanaServce {
 
     for (const signature of signatures) {
       if (!indexedSignaturesMap.has(signature)) {
-        await this.indexTx(signature);
+        const rawTransaction = await this.solanaClient.getParsedTransaction(signature);
+        await this.indexTx(rawTransaction);
       }
     }
   }
 
-  async indexTx(signature: string): Promise<{ signature: string, swapInfo: SolanaSwapInfo | null }> {
-    const transaction = await this.solanaClient.getParsedTransaction(signature);
+  async indexTx(transaction: ParsedTransactionWithMeta): Promise<void> {
     const signer = this.getTxSigner(transaction);
+    const signature = transaction.transaction.signatures[0];
     const swapInfo = await this.getSwapInfo(transaction);
 
     if (swapInfo) {
@@ -100,8 +103,6 @@ export class SolanaServce {
         block_time: transaction.blockTime
       });
     }
-
-    return { signature, swapInfo }
   }
 
   async indexToken(mintAddress: string): Promise<SolanaTokenMetadataEntity | null> {
@@ -123,20 +124,34 @@ export class SolanaServce {
     const signatures = await this.solanaClient.getSignaturesForAddress(accountAddress, { limit: 1000, until: last_signature });
 
     for (const {signature} of signatures.reverse()) {
-      const txInfo = await this.indexTx(signature);
-      await this.solanaRepository.updateLastSignatureForAccountToWatch(accountAddress, signature);
+      try {
+        const rawTransaction = await this.solanaClient.getParsedTransaction(signature);
 
-      await this.appEvents.emit(EventsRegistry.SolanaAccountNewTxEvent, { signature });
+        await this.indexTx(rawTransaction);
+        await this.solanaRepository.updateLastSignatureForAccountToWatch(accountAddress, signature);
+        const swap = await this.getSwapInfo(rawTransaction);
 
-      if (txInfo.swapInfo) {
-        const mintSwap = getAnotherTokenFromSwap(txInfo.swapInfo);
-        await this.indexAccountToken(accountAddress, mintSwap);
-
-        await this.appEvents.emit(EventsRegistry.SolanaAccountNewSwapEvent, {
+        const eventData = {
           signature,
-          account: accountAddress,
-          mint: mintSwap
-        });
+          signer: accountAddress,
+          raw: rawTransaction,
+          parsed: {
+            swap
+          }
+        }
+
+        if (swap) {
+          const mintSwap = getAnotherTokenFromSwap(swap);
+          await this.indexAccountToken(accountAddress, mintSwap);
+        }
+
+        if (this.accountTxWatch.has(accountAddress)) {
+          for (const handler of this.accountTxWatch.get(accountAddress)) {
+            await handler(eventData);
+          }
+        }
+      } catch (e) {
+        this.logger.error(e);
       }
     }
   }
@@ -258,7 +273,7 @@ export class SolanaServce {
     // this.logger.debug('signerBalances', signerBalances);
     // this.logger.debug('otherSideBalances', otherSideBalances);
 
-    const excludeTokens = transaction.meta.innerInstructions.reduce((result: { mint: string, amount: bigint }[], instruction: ParsedInnerInstruction) => {
+    const excludeTokens = transaction.meta.innerInstructions?.reduce((result: { mint: string, amount: bigint }[], instruction: ParsedInnerInstruction) => {
       instruction.instructions.forEach((item: ParsedInstruction) => {
         if (
           (item.parsed?.type === 'burn' && item.parsed?.info) ||
@@ -271,7 +286,7 @@ export class SolanaServce {
         }
       });
       return result;
-    }, []);
+    }, []) || [];
 
     // Calculate token changes
     const signerChangesByToken = signerBalances.reduce((result: Record<string, bigint>, balance) => {
@@ -339,5 +354,21 @@ export class SolanaServce {
 
   private returnSymbolIfSol(mintAddress: string) {
     return mintAddress === solAddress ? 'SOL' : mintAddress;
+  }
+
+  async getInfoAroundSwap(mintAddress: string, options: SignaturesForAddressOptions) {
+    const signatures = await this.solanaClient.getSignaturesForAddress(mintAddress, options);
+    const signers = [];
+
+    for (const { signature } of signatures) {
+      // const txInfo = await this.indexTx(signature);
+      const txInfo = await this.solanaClient.getParsedTransaction(signature);
+      const swapInfo = await this.getSwapInfo(txInfo);
+      const signer = this.getTxSigner(txInfo);
+      signers.push({ signer, signature, swapInfo });
+      console.log('signature', signature);
+    }
+
+    return { signers }
   }
 }

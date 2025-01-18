@@ -1,9 +1,9 @@
-import { Logger } from "../utils/logger";
+import { Logger } from "../../utils/logger";
 import { Cluster, Connection, Keypair, PublicKey, TransactionSignature, VersionedTransaction } from '@solana/web3.js';
 import { createJupiterApiClient, DefaultApi, QuoteResponse, SwapMode } from '@jup-ag/api';
-import { Result } from "../utils/result";
+import { Result } from "../../utils/result";
 import bs58 from 'bs58';
-import { solAddress } from "../helpers/token";
+import { solAddress } from "../../helpers/token";
 const privateKeys = new Map<string, string>();
 
 export interface SolanaWalletConfig {
