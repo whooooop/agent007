@@ -18,7 +18,8 @@ export async function swapTemplate(
   accountAddress: string,
   tokenSwap: string,
   swaps: SolanaAccountTokenSwapEntity[],
-  tokens: Record<string, SolanaTokenMetadataEntity>
+  tokens: Record<string, SolanaTokenMetadataEntity>,
+  traders: { total: number, today: number } | null
 ) {
   const token = tokens[tokenSwap];
   const tokenAccountUrl = getTokenAccountUrl(accountAddress, tokenSwap);
@@ -34,12 +35,20 @@ export async function swapTemplate(
   }
 
   message += `<b><a href="${ dexscreenerUrl }">${ token.symbol } (${ token.name })</a></b>` + NW;
-  message += `<a href="${ solscanTokenUrl }">${ tokenSwap }</a>` + NW + NW;
-  message += `<a href="${ solscanAccountUrl }">${ accountAddress }</a>` + NW + NW;
 
-  if (token.description) {
-    message += token.description + NW;
+  if (traders) {
+    message += NW;
+    message += `${ getColoredSquares(traders.total) } (${ traders.today }/${traders.total}) Gem Score` + NW + NW;
+    // message += `Today traders: ${ traders.today }` + NW;
+    // message += `Total traders: ${ traders.total }` + NW;
   }
+
+  message += `<a href="${ solscanTokenUrl }">${ tokenSwap }</a>` + NW + NW;
+  message += `<a href="${ solscanAccountUrl }">${ accountAddress }</a>` + NW;
+
+  // if (token.description) {
+  //   message += token.description + NW;
+  // }
 
   message += NW;
 
@@ -73,16 +82,40 @@ export async function swapTemplate(
   const jupUrl = getJupSwapUrl(tokenSwap, fee);
   const raydiumUrl = getRaydiumSwapUrl(tokenSwap);
 
-  message += `<a href="${ tokenAccountUrl }">All swaps</a>` + NW;
-  message += `---` + NW + NW;
+  message += `<a href="${ tokenAccountUrl }">All swaps</a>` + NW + NW;
   message += `Balance: ${ balanceTokenSwap } ${ tokens[tokenSwap]?.symbol || tokenSwap }` + NW;
   message += `Profit: ${ solProfit } Sol` + NW;
 
   message += NW;
 
-  message += `<a href="${ jupUrl }">Jupiter</a>` + NW;
-  message += `<a href="${ dexscreenerUrl }">Dexscreener</a>` + NW;
+  message += `<a href="${ jupUrl }">Jupiter</a> | <a href="${ dexscreenerUrl }">Dexscreener</a>` + NW;
   // message += `<a href="${ raydiumUrl }">Raydium</a>` + NW;
 
   return message;
 }
+
+// ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+// 🟥⬜⬜⬜⬜⬜⬜⬜⬜⬜
+// 🟨🟨⬜⬜⬜⬜⬜⬜⬜⬜
+// 🟨🟨🟨⬜⬜⬜⬜⬜⬜⬜
+// 🟨🟨🟨🟨⬜⬜⬜⬜⬜⬜
+// 🟩🟩🟩🟩🟩⬜⬜⬜⬜⬜
+// 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜
+// 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩
+function getColoredSquares(n: number): string {
+  let colorSquare: string;
+  if (n === 1) {
+    colorSquare = '🟥';
+  } else if (n <= 4) {
+    colorSquare = '🟨';
+  } else {
+    colorSquare = '🟩';
+  }
+  const filledCount = Math.min(n, 10);
+  const unfilledCount = 10 - filledCount;
+  const filled = colorSquare.repeat(filledCount);
+  const unfilled = '⬜'.repeat(unfilledCount);
+  return filled + unfilled;
+}
+
+

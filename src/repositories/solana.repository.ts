@@ -44,6 +44,22 @@ export class SolanaRepository {
     });
   }
 
+  getCountTradersByToken(mintAccount: string, beforeBlockTime?: number): Promise<{ account: string }[]> {
+    let query = this.accountTokenSwapRepository
+      .createQueryBuilder('swap')
+      .select(['swap.account'])
+      .where('(swap.token_in = :token OR swap.token_out = :token)', { token: mintAccount })
+
+    if (beforeBlockTime) {
+      query = query.andWhere('swap.block_time > :timestamp', { timestamp: beforeBlockTime })
+    }
+
+    return query
+      .orderBy('swap.block_time', 'DESC')
+      .groupBy('swap.account')
+      .getMany();
+  }
+
   async getAccountWatchInfo(accountAddress): Promise<SolanaAccountWatchEntity> {
     return this.accountWatchRepository.findOne({
       where: {

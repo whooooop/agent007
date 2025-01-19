@@ -16,6 +16,7 @@ import { SolanaAccountTokenSwapEntity } from "../../entities/solanaAccountTokenS
 import { SolanaAccountWatchEntity } from "../../entities/solanaAccountWatch.entity";
 import { SolanaEvent } from "./types/solana.events";
 import { Loop } from "../../utils/loop";
+import { getStartOfDayInSecondsLocal } from "../../helpers/date";
 
 export class SolanaServce {
   private readonly logger = new Logger(SolanaServce.name);
@@ -117,6 +118,19 @@ export class SolanaServce {
 
   async getAccountTokens(accountAddress: string): Promise<GetProgramAccountsResponse> {
     return this.solanaClient.getTokenAccountsByOwner(accountAddress);
+  }
+
+  getRawParsedTransaction(signature: string) {
+    return this.solanaClient.getParsedTransaction(signature);
+  }
+
+  async getTradersByToken(mintAccount: string) {
+    const today = await this.solanaRepository.getCountTradersByToken(mintAccount, getStartOfDayInSecondsLocal());
+    const total = await this.solanaRepository.getCountTradersByToken(mintAccount);
+    return {
+      today: today.length,
+      total: total.length
+    }
   }
 
   async findAccountNewTxs(accountAddress: string) {

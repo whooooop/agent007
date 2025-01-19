@@ -5,5 +5,11 @@ export function getDateTimeByBlockTime(blockTime: number): string {
   const hours = String(date.getUTCHours()).padStart(2, '0');
   const minutes = String(date.getUTCMinutes()).padStart(2, '0');
 
-  return `${day}.${month} ${hours}:${minutes}(UTC)`;
+  return `${day}.${month} ${hours}:${minutes} +0`;
+}
+
+export function getStartOfDayInSecondsLocal(): number {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return Math.floor(now.getTime() / 1000);
 }

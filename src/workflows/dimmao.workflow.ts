@@ -12,7 +12,8 @@ export class DimmaoWorkflow extends Workflow {
 
     new WatchSolanaAccountWorkflowTemplate(this.agentApi, {
       accountAddress: 'GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z',
-      notificationChatId: '-1002376488914'
+      notificationChatId: '-1002376488914',
+      templateShowTraders: false
     }).run();
 
     new WatchAccountTgMessagesWorkflowTemplate(this.agentApi, {

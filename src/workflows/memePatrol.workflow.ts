@@ -36,10 +36,20 @@ export class MemePatrolWorkflow extends Workflow {
       'J67hWH8nF5wp9rM1pW8AaYm3vamgpLXeBneYT46dyDBL',
       'AvQ1vgGfeJRU896QjvVM3vp3tQJK7dkP6hERe6taeQxR',
       '2tSCzYcz1aV4s6SxgEaDQTFt7ELSDLzbn3VLEG3ospJX',
+      'Ceod9MpGUYHBFv8HhDXzrhAh7w6M37jYXixeiRm8WCzR',
+      'CeoGoucJbwjno6KC1BiX4efKGqQyBjRzqgyhLYwJfgfr',
+      '8WiUx5AhwaSmDtjQHzTLo8G3m5PnNDFQSjWC7558zng9',
+      'MarsfR4ScvDwu4XMybf3kJ3hMHjAcg8iPxWqerq3bAY',
+      'CeoexdLDkYm7YnSSNUBbr9jdW2rwk583UgLzb8ScWAzP'
     ]);
 
     for (const accountAddress of addresses) {
-      new WatchSolanaAccountWorkflowTemplate(this.agentApi, { accountAddress, notificationChatId }).run();
+      new WatchSolanaAccountWorkflowTemplate(this.agentApi, {
+        accountAddress,
+        notificationChatId,
+        templateShowTraders: true,
+        notificationGemScoreOver: 1
+      }).run();
     }
   }
 }

@@ -6,10 +6,10 @@ export function applyDecimalsBigInt(rawAmount: string | number | bigint, decimal
   return format ? formatNumber(val) : val.toString();
 }
 
-export function formatNumber(num: number): string {
+export function formatNumber(num: number, float: number = 2): string {
   let [integerPart, decimalPart] = num.toString().split('.');
 
   integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 
-  return decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
+  return decimalPart ? `${integerPart}.${decimalPart.slice(0, float)}` : integerPart;
 }
