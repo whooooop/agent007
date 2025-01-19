@@ -3,7 +3,6 @@ import { AppTelegramClient } from "./telegram.client";
 import { TelegramRepository } from "../../repositories/telegram.repository";
 import { TelegramAccountWatchEntity } from "../../entities/telegramAccountWatch.entity";
 import * as messageMethods from "telegram/client/messages";
-import { TelegramNotificationEntity } from "../../entities/telegramNotification.entity";
 import { TelegramEvent } from "./types/telegram.events";
 import { Loop } from "../../utils/loop";
 
@@ -38,7 +37,7 @@ export class TelegramService {
   }
 
   async watchUsernameMessagesHandler() {
-    for (const id of Object.keys(this.usernameMessageWatch)) {
+    for (const id of this.usernameMessageWatch.keys()) {
       try {
         await this.findNewMessageByAccount(id);
       } catch (e) {
@@ -96,14 +95,6 @@ export class TelegramService {
         }
       }
     }
-  }
-
-  async getTelegramNotifications(username: string, chat_id: string): Promise<TelegramNotificationEntity[]>{
-    const accountInfo = await this.telegramRepository.findAccountWatchInfo(username, chat_id);
-    if (!accountInfo) {
-      return [];
-    }
-    return this.telegramRepository.getNotificationsByAccountWatchId(accountInfo.id);
   }
 }
 

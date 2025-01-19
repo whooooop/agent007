@@ -2,10 +2,9 @@ import { Repository } from 'typeorm';
 import { Logger } from '../utils/logger';
 import { Database } from '../core/database';
 import { TelegramAccountWatchEntity } from "../entities/telegramAccountWatch.entity";
-import { TelegramNotificationEntity } from "../entities/telegramNotification.entity";
 
 export class TelegramRepository {
-  private readonly logger = new Logger('TelegramRepository');
+  private readonly logger = new Logger(TelegramRepository.name);
 
   private readonly database: Database;
 
@@ -18,10 +17,6 @@ export class TelegramRepository {
 
   private get telegramAccountWatchRepository(): Repository<TelegramAccountWatchEntity> {
     return this.database.getRepository(TelegramAccountWatchEntity);
-  }
-
-  private get telegramNotificationRepository(): Repository<TelegramNotificationEntity> {
-    return this.database.getRepository(TelegramNotificationEntity);
   }
 
   getAccountWatchInfoById(id: string): Promise<TelegramAccountWatchEntity | null> {
@@ -40,19 +35,6 @@ export class TelegramRepository {
     this.logger.debug('add account to watch', username, chat_id);
 
     return this.telegramAccountWatchRepository.save({ username, chat_id, last_message_id });
-  }
-
-  async addNotification(telegram_account_watch_id: string, chat_id: string) {
-    await this.telegramNotificationRepository.upsert(
-      { telegram_account_watch_id, chat_id },
-      ['telegram_account_watch_id', 'chat_id']
-    );
-  }
-
-  getNotificationsByAccountWatchId(account_watch_id: string): Promise<TelegramNotificationEntity[]> {
-    return this.telegramNotificationRepository.find({
-      where: { telegram_account_watch_id: account_watch_id }
-    });
   }
 
   async updateLastMessageId(username: string, chat_id: string, last_message_id: number): Promise<void> {

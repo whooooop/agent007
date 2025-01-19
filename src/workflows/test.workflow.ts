@@ -7,6 +7,8 @@ export class TestWorkflow extends Workflow {
   private readonly logger = new Logger(TestWorkflow.name);
 
   async run() {
+    this.logger.info('run');
+
     // const r = await this.agentApi.solanaWallet.swapBySol('4T54PGF4gAU75NL9j2GHvrVbR6u5zjyJE4zGuJbkpump', 0.001);
     // if (r.isSuccess()) {
     //   console.log(`https://solscan.io/tx/${r.getValue()}`);

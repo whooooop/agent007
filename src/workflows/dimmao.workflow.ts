@@ -1,70 +1,25 @@
-import { AgentAPI } from "../core/agentAPI";
 import { Workflow } from "../core/workflow";
-import { SolanaEvent } from "../components/solana/types/solana.events";
 import { Logger } from "../utils/logger";
-import { swapTemplate } from "../templates/swap.template";
-import { SolanaServce } from "../components/solana/solana.servce";
-import { AppTelegramClient } from "../components/telegram/telegram.client";
-import { TelegramEvent } from "../components/telegram/types/telegram.events";
-import { getAnotherTokenFromSwap } from "../helpers/token";
-import { TelegramService } from "../components/telegram/telegram.service";
+import { WatchSolanaAccountWorkflowTemplate } from "./templates/watchSolanaAccount.workflow";
+import { WatchAccountTgMessagesWorkflowTemplate } from "./templates/watchAccountTgMessages.workflow";
 
 export class DimmaoWorkflow extends Workflow {
   static ENABLED = true;
-
-  declare agentApi: AgentAPI;
-
   private readonly logger = new Logger(DimmaoWorkflow.name);
-  private solanaService: SolanaServce;
-  private telegramClient: AppTelegramClient;
-  private telegramService: TelegramService;
-
-  private readonly dimmaoUsername = 'dimmao';
-  private readonly narniaChatId = '-1001369370434';
-  private readonly dimmaoAddress = 'GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z';
-  private readonly notificationChatId = '-1002376488914';
 
   run() {
-    this.solanaService = this.agentApi.getSolanaServce();
-    this.telegramClient = this.agentApi.getTelegramClient();
-    this.telegramService = this.agentApi.getTelegramService();
+    this.logger.info('run');
 
-    this.solanaService.watchAccountTx(
-      this.dimmaoAddress,
-      (data: SolanaEvent.Tx.Payload) => this.triggerTx(data)
-    );
+    new WatchSolanaAccountWorkflowTemplate(this.agentApi, {
+      accountAddress: 'GEaqTiqvU5xwbVjVmrG7BEzztCAkHRr8bWeZo9tZWQ2Z',
+      notificationChatId: '-1002376488914'
+    }).run();
 
-    this.telegramService.watchUsernameMessages(
-      this.dimmaoUsername,
-      this.narniaChatId,
-      (data: TelegramEvent.Message.Payload) => this.triggerNewMessage(data)
-    );
-  }
-
-  async triggerTx({ signer, parsed }: SolanaEvent.Tx.Payload){
-    if (!parsed.swap) return;
-    this.logger.info('new swap');
-
-    try {
-      const mint = getAnotherTokenFromSwap(parsed.swap);
-      const { swaps, tokens} = await this.solanaService.getIndexedAccountTokenSwaps(signer, mint);
-      const message = await swapTemplate(signer, mint, swaps, tokens);
-
-      await this.telegramClient.sendMessage(this.notificationChatId, {
-        message,
-        parseMode: 'html'
-      });
-    } catch (e) {
-      this.logger.error('trigger tx', e);
-    }
-  }
-
-  async triggerNewMessage({ message, chat_id }: TelegramEvent.Message.Payload) {
-    this.logger.info('new message');
-    if (message.replyToMsgId) {
-      await this.telegramClient.forwardMessage(this.notificationChatId, chat_id, message.replyToMsgId);
-    }
-    await this.telegramClient.forwardMessage(this.notificationChatId, this.narniaChatId, message.id);
+    new WatchAccountTgMessagesWorkflowTemplate(this.agentApi, {
+      username: 'dimmao',
+      chatId: '-1001369370434',
+      notificationChatId: '-1002376488914'
+    }).run();
   }
 
   // private async accountSwapsStat(accountAddress: string) {

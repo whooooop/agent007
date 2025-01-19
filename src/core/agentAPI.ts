@@ -14,7 +14,6 @@ import { TelegramRepository } from "../repositories/telegram.repository";
 import { TelegramService } from "../components/telegram/telegram.service";
 import { AppTelegramClientConfig } from "../components/telegram/types/telegramClientConfig.types";
 import { SolanaWallet, SolanaWalletConfig } from "../components/solana/solana.wallet";
-import { Workflow, WorkflowConstructor } from "./workflow";
 
 interface LoggerConfig {
   levels?: LogLevel[];
@@ -29,7 +28,6 @@ export interface AgentAPIConfig {
   telegram: AppTelegramClientConfig
   wallets?: AppWalletsConfig
   solanaClient: SolanaClientConfig
-  workflows: Array<WorkflowConstructor>
 }
 export class AgentAPI {
   private readonly logger = new Logger('AgentAPI');
@@ -48,8 +46,6 @@ export class AgentAPI {
   private readonly telegramService: TelegramService;
   private readonly pumpfunService: PumpfunService;
   private readonly xComServise: XComServise;
-
-  private readonly workflows: Array<Workflow> = [];
 
   constructor(config: AgentAPIConfig) {
     if (config.logger) {
@@ -105,16 +101,16 @@ export class AgentAPI {
     this.xComServise = new XComServise();
     this.pumpfunService = new PumpfunService();
 
-    for (const WorkflowInstance of config.workflows) {
-      if (WorkflowInstance.ENABLED) {
-        this.logger.info(`workflow ${WorkflowInstance.name} ENABLED`);
-        this.workflows.push(
-          new WorkflowInstance(this)
-        );
-      } else {
-        this.logger.info(`workflow ${WorkflowInstance.name} DISABLED`);
-      }
-    }
+    // for (const WorkflowInstance of config.workflows) {
+    //   if (WorkflowInstance.ENABLED) {
+    //     this.logger.info(`workflow ${WorkflowInstance.name} ENABLED`);
+    //     this.workflows.push(
+    //       new WorkflowInstance(this)
+    //     );
+    //   } else {
+    //     this.logger.info(`workflow ${WorkflowInstance.name} DISABLED`);
+    //   }
+    // }
   }
 
   static async bootstrap (config: AgentAPIConfig) {
@@ -127,15 +123,7 @@ export class AgentAPI {
   async initialize() {
     await this.database.initialize();
 
-    this.runWorkflows();
-
     this.logger.info('initialized');
-  }
-
-  private runWorkflows () {
-    for (const workflow of this.workflows) {
-      workflow.run();
-    }
   }
 
   getSolanaServce () {

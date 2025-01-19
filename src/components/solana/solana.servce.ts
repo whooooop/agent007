@@ -57,7 +57,7 @@ export class SolanaServce {
   }
 
   async watchAccountsHandler() {
-    for (const account of Object.keys(this.accountTxWatch)) {
+    for (const account of this.accountTxWatch.keys()) {
       try {
         await this.findAccountNewTxs(account);
       } catch (e) {

@@ -4,10 +4,9 @@ import { Database } from '../core/database';
 import { SolanaTokenMetadataEntity,  } from "../entities/solanaTokenMetadata.entity";
 import { SolanaAccountTokenSwapEntity } from "../entities/solanaAccountTokenSwap.entity";
 import { SolanaAccountWatchEntity } from "../entities/solanaAccountWatch.entity";
-import { SolanaNotificationEntity, SolanaNotificationEvent } from "../entities/solanaNotification.entity";
 
 export class SolanaRepository {
-  private readonly logger = new Logger('SolanaRepository');
+  private readonly logger = new Logger(SolanaRepository.name);
 
   private readonly database: Database;
 
@@ -27,10 +26,6 @@ export class SolanaRepository {
 
   private get accountWatchRepository(): Repository<SolanaAccountWatchEntity> {
     return this.database.getRepository(SolanaAccountWatchEntity);
-  }
-
-  private get accountNotificationRepository(): Repository<SolanaNotificationEntity> {
-    return this.database.getRepository(SolanaNotificationEntity);
   }
 
   async addAccountToWatch(accountAddress: string, lastSignature: string): Promise<SolanaAccountWatchEntity> {
@@ -111,19 +106,6 @@ export class SolanaRepository {
     return this.tokenMetadataRepository.save({
       address,
       ...data,
-    });
-  }
-
-  async addNotification(account: string, chat_id: string, event: SolanaNotificationEvent) {
-    await this.accountNotificationRepository.upsert(
-      { account, chat_id, event },
-      ['account', 'chat_id', 'event']
-    );
-  }
-
-  getNotificationsByAccount(account: string, event?: SolanaNotificationEvent): Promise<SolanaNotificationEntity[]> {
-    return this.accountNotificationRepository.find({
-      where: { account, event }
     });
   }
 }
