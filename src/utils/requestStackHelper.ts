@@ -99,8 +99,8 @@ export class RequestStackHelper {
     while (true) {
       try {
         const result = await requestFunction();
-        if (attempt !== 0) {
-          // console.log('OK');
+        if (attempt > 5) {
+          console.log('OK');
         }
         return result;
       } catch (error: any) {
@@ -108,6 +108,7 @@ export class RequestStackHelper {
           error?.response?.status === 429 ||
           error?.message?.includes('429') ||
           error?.cause?.errno === -3008 ||
+          error?.cause?.code === 'UND_ERR_CONNECT_TIMEOUT' ||
           error?.type === 'union' ||
           error?.value?.error === "couldn't complete the request, try again later"
         ) {
