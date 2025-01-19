@@ -19,7 +19,7 @@ export function getAnotherTokenFromSwap(swap: Swap): string {
   return swap.tokenOut.mint === solAddress ? swap.tokenIn.mint : swap.tokenOut.mint;
 }
 
-export async function getTokenAccountAddress(accountAddress: string, tokenMintAddress: string): Promise<string> {
+export function getTokenAccountAddress(accountAddress: string, tokenMintAddress: string): string {
   const accountPublicKey = new PublicKey(accountAddress);
   const tokenMintPublicKey = new PublicKey(tokenMintAddress);
 

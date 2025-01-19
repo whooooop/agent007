@@ -12,12 +12,12 @@ export function getSolscanTxUrl(signature: string): string {
   return `https://solscan.io/tx/${signature}`;
 }
 
-export async function getAccountUrl(accountAddress: string): Promise<string> {
+export function getAccountUrl(accountAddress: string): string {
   return `https://solscan.io/account/${accountAddress}`;
 }
 
-export async function getTokenAccountUrl(accountAddress: string, tokenMintAddress: string): Promise<string> {
-  const tokenAccount = await getTokenAccountAddress(accountAddress, tokenMintAddress);
+export function getTokenAccountUrl(accountAddress: string, tokenMintAddress: string): string {
+  const tokenAccount = getTokenAccountAddress(accountAddress, tokenMintAddress);
   return getAccountUrl(tokenAccount);
 }
 
