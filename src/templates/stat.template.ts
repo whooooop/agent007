@@ -10,7 +10,7 @@ export async function statTemplate(
   profit: string,
   tokens: GetProgramAccountsResponse
 ) {
-  const accountUrl = await getAccountUrl(accountAddress);
+  const accountUrl = getAccountUrl(accountAddress);
   let message = '';
 
   message += `All-time stats: <b><a href="${ accountUrl }">${ accountAddress }</a></b>` + NW + NW;

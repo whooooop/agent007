@@ -1,4 +1,5 @@
 import {
+  getAccountUrl,
   getDexscreenerUrl,
   getJupSwapUrl, getRaydiumSwapUrl,
   getSolscanTokenUrl,
@@ -20,9 +21,10 @@ export async function swapTemplate(
   tokens: Record<string, SolanaTokenMetadataEntity>
 ) {
   const token = tokens[tokenSwap];
-  const tokenAccountUrl = await getTokenAccountUrl(accountAddress, tokenSwap);
+  const tokenAccountUrl = getTokenAccountUrl(accountAddress, tokenSwap);
   const dexscreenerUrl = getDexscreenerUrl(tokenSwap, accountAddress);
   const solscanTokenUrl = getSolscanTokenUrl(tokenSwap);
+  const solscanAccountUrl = getAccountUrl(accountAddress);
 
   let message = '';
   let swapType: 'buy' | 'sell';
@@ -33,6 +35,7 @@ export async function swapTemplate(
 
   message += `<b><a href="${ dexscreenerUrl }">${ token.symbol } (${ token.name })</a></b>` + NW;
   message += `<a href="${ solscanTokenUrl }">${ tokenSwap }</a>` + NW + NW;
+  message += `<a href="${ solscanAccountUrl }">${ accountAddress }</a>` + NW + NW;
 
   if (token.description) {
     message += token.description + NW;
@@ -42,19 +45,19 @@ export async function swapTemplate(
 
   const balanceTokenSwap = applyDecimalsBigInt(
     getBalanceBySwaps(tokenSwap, swaps),
-    tokens[tokenSwap].decimals
+    tokens[tokenSwap].decimals || 6
   );
   const solProfit = applyDecimalsBigInt(
     getBalanceBySwaps(solAddress, swaps),
-    tokens[solAddress].decimals
+    tokens[solAddress]?.decimals || 6
   );
 
-  for (const swap of swaps) {
+  for (const swap of swaps.slice(0, 5)) {
     const isBuy = swap.token_in === tokenSwap;
     const date = getDateTimeByBlockTime(swap.block_time);
     const icon = isBuy ? '🟢 ' : '🔴 ';
-    const tokenIn = tokens[swap.token_in];
-    const tokenOut = tokens[swap.token_out];
+    const tokenIn = tokens[swap.token_in] || { symbol: swap.token_in, decimals: 6 };
+    const tokenOut = tokens[swap.token_out] || { symbol: swap.token_out, decimals: 6 };
     const amountIn = applyDecimalsBigInt(swap.amount_in, tokenIn.decimals);
     const amountOut = applyDecimalsBigInt(swap.amount_out, tokenOut.decimals);
     const txUrl = getSolscanTxUrl(swap.signature);
@@ -72,7 +75,7 @@ export async function swapTemplate(
 
   message += `<a href="${ tokenAccountUrl }">All swaps</a>` + NW;
   message += `---` + NW + NW;
-  message += `Balance: ${ balanceTokenSwap } ${ tokens[tokenSwap].symbol }` + NW;
+  message += `Balance: ${ balanceTokenSwap } ${ tokens[tokenSwap]?.symbol || tokenSwap }` + NW;
   message += `Profit: ${ solProfit } Sol` + NW;
 
   message += NW;
