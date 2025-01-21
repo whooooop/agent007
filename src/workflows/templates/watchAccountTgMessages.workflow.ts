@@ -37,10 +37,12 @@ export class WatchAccountTgMessagesWorkflowTemplate extends Workflow {
   }
 
   async triggerNewMessage({ message, chat_id }: TelegramEvent.Message.Payload) {
-    this.logger.info('new message');
-    if (message.replyToMsgId) {
-      await this.telegramClient.forwardMessage(this.config.notificationChatId, chat_id, message.replyToMsgId);
-    }
-    await this.telegramClient.forwardMessage(this.config.notificationChatId, chat_id, message.id);
+    try {
+      this.logger.info('new message');
+      if (message.replyToMsgId) {
+        await this.telegramClient.forwardMessage(this.config.notificationChatId, chat_id, message.replyToMsgId);
+      }
+      await this.telegramClient.forwardMessage(this.config.notificationChatId, chat_id, message.id);
+    } catch (e) {}
   }
 }

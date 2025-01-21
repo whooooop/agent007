@@ -13,6 +13,8 @@ export class TestWorkflow extends Workflow {
     // if (r.isSuccess()) {
     //   console.log(`https://solscan.io/tx/${r.getValue()}`);
     // }
+    // const result = await this.agentApi.getSolanaServce().getRawParsedTransaction('');
+    // console.log(JSON.stringify(result));
 
     const explore = [
       {

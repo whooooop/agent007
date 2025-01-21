@@ -110,12 +110,12 @@ export class AppTelegramClient {
     return connection.getMessages(chatEntity, filter);
   }
 
-  async sendMessage(chatId: string, params: messageMethods.SendMessageParams){
+  async sendMessage(chatId: string, params: messageMethods.SendMessageParams): Promise<Api.Message>{
     this.logger.debug('send message', chatId);
     this.logger.verbose('params', params);
 
     const connection = await this.getConnection();
-    await connection.sendMessage(chatId, params);
+    return connection.sendMessage(chatId, params);
   }
 
   /**

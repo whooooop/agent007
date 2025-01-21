@@ -9,6 +9,7 @@ import { swapTemplate } from "../../templates/swap.template";
 
 interface WatchSolanaAccountWorkflowConfig {
   accountAddress: string
+  name?: string
   notificationChatId: string
   templateShowTraders: boolean
   notificationGemScoreOver?: number
@@ -46,14 +47,20 @@ export class WatchSolanaAccountWorkflowTemplate extends Workflow {
       const mint = getAnotherTokenFromSwap(parsed.swap);
       const { swaps, tokens} = await this.solanaService.getIndexedAccountTokenSwaps(signer, mint);
       const traders = this.config.templateShowTraders ? await this.solanaService.getTradersByToken(mint) : null;
-      const message = await swapTemplate(signer, mint, swaps, tokens, traders);
-      const gemScore = traders.total;
+      const message = await swapTemplate({ signer, mint, swaps, tokens, traders });
+      const gemScore = traders?.total;
 
-      if (!this.config.notificationGemScoreOver || this.config.notificationGemScoreOver > gemScore) {
-        await this.telegramClient.sendMessage(this.config.notificationChatId, {
+      if (!this.config.notificationGemScoreOver || this.config.notificationGemScoreOver < gemScore) {
+        const m = await this.telegramClient.sendMessage(this.config.notificationChatId, {
           message,
           parseMode: 'html'
         });
+        // try {
+        //   await this.telegramClient.sendMessage(this.config.notificationChatId, {
+        //     message: mint,
+        //     commentTo: m.id
+        //   });
+        // } catch (e) {}
       }
     } catch (e) {
       this.logger.error('trigger tx', e);
