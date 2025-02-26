@@ -12,9 +12,7 @@
     "start": "node ./dist/start.js",
     "clean": "rm -rf dist",
     "t": "node ./cmd.mjs test",
-    "test": "jest",
-    "prepublish": "npm run clean && npm run build && npm run test",
-    "publish": "npm publish --access public"
+    "test": "jest"
   },
   "dependencies": {
     "@jup-ag/api": "^6.0.36",
