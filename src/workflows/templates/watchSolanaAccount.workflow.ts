@@ -3,7 +3,7 @@ import { AgentAPI } from "../../core/agentAPI";
 import { Logger } from "../../utils/logger";
 import { SolanaServce } from "../../components/solana/solana.servce";
 import { AppTelegramClient } from "../../components/telegram/telegram.client";
-import { SolanaEvent } from "../../components/solana/types/solana.events";
+import { SolanaEvent, SolanaTxPayload } from "../../components/solana/types/solana.events";
 import { getAnotherTokenFromSwap } from "../../helpers/token";
 import { swapTemplate } from "../../templates/swap.template";
 
@@ -35,11 +35,11 @@ export class WatchSolanaAccountWorkflowTemplate extends Workflow {
 
     this.solanaService.watchAccountTx(
       this.config.accountAddress,
-      (data: SolanaEvent.Tx.Payload) => this.triggerTx(data)
+      (data: SolanaTxPayload) => this.triggerTx(data)
     );
   }
 
-  async triggerTx({ signer, parsed }: SolanaEvent.Tx.Payload){
+  async triggerTx({ signer, parsed }: SolanaTxPayload){
     if (!parsed.swap) return;
     this.logger.info('new swap');
 
@@ -47,7 +47,8 @@ export class WatchSolanaAccountWorkflowTemplate extends Workflow {
       const mint = getAnotherTokenFromSwap(parsed.swap);
       const { swaps, tokens} = await this.solanaService.getIndexedAccountTokenSwaps(signer, mint);
       const traders = this.config.templateShowTraders ? await this.solanaService.getTradersByToken(mint) : null;
-      const message = await swapTemplate({ signer, mint, swaps, tokens, traders });
+      const name = this.config.name;
+      const message = await swapTemplate({ signer, mint, swaps, tokens, traders, name });
       const gemScore = traders?.total;
 
       if (!this.config.notificationGemScoreOver || this.config.notificationGemScoreOver < gemScore) {

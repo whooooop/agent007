@@ -26,7 +26,7 @@ export class SolanaClient {
   private readonly endpoint: string;
   private requestStack: RequestStackHelper;
 
-  constructor(config: SolanaClientConfig) {
+  constructor(config: SolanaClientConfig = { endpoint: 'https://api.mainnet-beta.solana.com', stackTimeout: 5000 }) {
     this.requestStack = new RequestStackHelper(config.stackTimeout || 5000);
     this.endpoint = config.endpoint || 'https://api.mainnet-beta.solana.com';
     this.logger.info('client created');

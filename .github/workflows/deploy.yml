@@ -1,0 +1,60 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Add SSH known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Build Docker image
+        run: docker build -t ${{ vars.APP_NAME }}:${{ github.sha }} .
+
+      - name: Save image to .tar
+        run: docker save -o ${{ vars.APP_NAME }}.image.tar ${{ vars.APP_NAME }}:${{ github.sha }}
+
+      - name: Transfer image to server
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "${{ vars.APP_NAME }}.image.tar"
+          target: "/opt/${{ vars.APP_NAME }}/"
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v0.1.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /opt/${{ vars.APP_NAME }}            
+            docker image prune -af
+            docker load -i ${{ vars.APP_NAME }}.image.tar
+            docker stop ${{ vars.APP_NAME }} || true
+            docker rm ${{ vars.APP_NAME }} || true
+            docker run \
+              -d \
+              --restart always \
+              --name ${{ vars.APP_NAME }} \
+              --memory 512m \
+              --memory-swap 512m \
+              -v /opt/${{ vars.APP_NAME }}/db/data.db:/app/data.db \
+              -e TELEGRAM_CLIENT_API_HASH="${{ secrets.TELEGRAM_CLIENT_API_HASH }}" \
+              -e TELEGRAM_CLIENT_API_ID="${{ secrets.TELEGRAM_CLIENT_API_ID }}" \
+              -e TELEGRAM_CLIENT_SESSION="${{ secrets.TELEGRAM_CLIENT_SESSION }}" \
+              -e SOLANA_CLIENT_ENDPOINT="${{ vars.SOLANA_CLIENT_ENDPOINT }}" \
+              -e SOLANA_CLIENT_STACK_TIMEOUT="${{ vars.SOLANA_CLIENT_STACK_TIMEOUT }}" \
+              ${{ vars.APP_NAME }}:${{ github.sha }}

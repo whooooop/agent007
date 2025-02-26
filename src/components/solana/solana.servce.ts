@@ -14,7 +14,7 @@ import { SolanaSwapInfo } from "./types/solanaSwapInfo";
 import { SolanaTokenMetadataEntity } from "../../entities/solanaTokenMetadata.entity";
 import { SolanaAccountTokenSwapEntity } from "../../entities/solanaAccountTokenSwap.entity";
 import { SolanaAccountWatchEntity } from "../../entities/solanaAccountWatch.entity";
-import { SolanaEvent } from "./types/solana.events";
+import { SolanaEvent, SolanaTxPayload } from "./types/solana.events";
 import { Loop } from "../../utils/loop";
 import { getStartOfDayInSecondsLocal } from "../../helpers/date";
 
@@ -23,7 +23,7 @@ export class SolanaServce {
 
   private readonly solanaClient: SolanaClient;
   private readonly solanaRepository: SolanaRepository;
-  private readonly accountTxWatch: Map<string, Set<(payload: SolanaEvent.Tx.Payload) => {}>> = new Map();
+  private readonly accountTxWatch: Map<string, Set<(payload: SolanaTxPayload) => {}>> = new Map();
 
   constructor(
     solanaRepository: SolanaRepository,
@@ -49,7 +49,7 @@ export class SolanaServce {
     return this.solanaRepository.addAccountToWatch(account, lastSignature);
   }
 
-  async watchAccountTx(accountAddress: string, handler: ((payload: SolanaEvent.Tx.Payload) => {})){
+  async watchAccountTx(accountAddress: string, handler: ((payload: SolanaTxPayload) => {})){
     await this.addAccountToWatch(accountAddress);
     if (!this.accountTxWatch.has(accountAddress)) {
       this.accountTxWatch.set(accountAddress, new Set());

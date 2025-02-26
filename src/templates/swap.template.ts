@@ -1,6 +1,6 @@
 import {
   getAccountUrl,
-  getDexscreenerUrl,
+  getDexscreenerUrl, getGmgnUrl,
   getJupSwapUrl, getRaydiumSwapUrl,
   getSolscanTokenUrl,
   getSolscanTxUrl,
@@ -27,6 +27,7 @@ export async function swapTemplate({ signer, name, mint, swaps, tokens, traders 
   const token = tokens[mint];
   const tokenAccountUrl = getTokenAccountUrl(signer, mint);
   const dexscreenerUrl = getDexscreenerUrl(mint, signer);
+  const gmgnUrl = getGmgnUrl(mint, signer);
   const solscanTokenUrl = getSolscanTokenUrl(mint);
   const solscanAccountUrl = getAccountUrl(signer);
 
@@ -35,7 +36,7 @@ export async function swapTemplate({ signer, name, mint, swaps, tokens, traders 
 
   const balanceTokenSwap = applyDecimalsBigInt(
     getBalanceBySwaps(mint, swaps),
-    tokens[mint].decimals || 6
+    tokens[mint]?.decimals || 6
   );
   const solProfit = applyDecimalsBigInt(
     getBalanceBySwaps(solAddress, swaps),
@@ -52,6 +53,8 @@ export async function swapTemplate({ signer, name, mint, swaps, tokens, traders 
   } else {
     message += `<b><a href="${ dexscreenerUrl }">${ mint }</a></b>` + NW;
   }
+
+  message += NW;
 
   if (traders) {
     message += `${ getColoredSquares(traders.total) } (${ traders.today }/${traders.total}) Gem Score` + NW;
@@ -92,7 +95,7 @@ export async function swapTemplate({ signer, name, mint, swaps, tokens, traders 
 
   message += NW;
 
-  message += `<a href="${ jupUrl }">Jupiter</a> | <a href="${ dexscreenerUrl }">Dexscreener</a>` + NW;
+  message += `<a href="${ jupUrl }">Jupiter</a> | <a href="${gmgnUrl}">GMGN</a> | <a href="${ dexscreenerUrl }">Dexscreener</a>` + NW;
   // message += `<a href="${ raydiumUrl }">Raydium</a>` + NW;
 
   return message;

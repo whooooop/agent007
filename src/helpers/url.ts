@@ -8,6 +8,10 @@ export function getDexscreenerUrl(mintAddress: string, accountAddress?: string):
   return `https://dexscreener.com/solana/${mintAddress}${accountAddress ? `?maker=${accountAddress}` : ''}`;
 }
 
+export function getGmgnUrl(mintAddress: string, accountAddress?: string): string {
+  return `https://gmgn.ai/sol/token/${mintAddress}?tab=activity${accountAddress ? `&maker=${accountAddress}` : ''}`;
+}
+
 export function getSolscanTxUrl(signature: string): string {
   return `https://solscan.io/tx/${signature}`;
 }

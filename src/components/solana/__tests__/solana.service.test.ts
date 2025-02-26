@@ -30,7 +30,6 @@ describe('getSwapInfo', () => {
   beforeEach(() => {
     Logger.levels = [];
     solanaService = new SolanaServce(
-      appEvents,
       solanaRepository,
       solanaClient
     );

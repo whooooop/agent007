@@ -1,0 +1,73 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Add SSH known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Build Docker image
+        run: docker build -t ${{ vars.APP_NAME }}:${{ github.sha }} .
+
+      - name: Save image to .tar
+        run: docker save -o image.tar ${{ vars.APP_NAME }}:${{ github.sha }}
+
+      - name: Transfer image to server
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "image.tar"
+          target: "/opt/${{ vars.APP_NAME }}/"
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v0.1.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /opt/${{ vars.APP_NAME }}
+            docker image prune -af
+            docker load -i image.tar
+            docker stop ${{ vars.APP_NAME }} || true
+            docker rm ${{ vars.APP_NAME }} || true
+            docker run \
+              -d \
+              --restart always \
+              --network postgress_my_network \
+              --name ${{ vars.APP_NAME }} \
+              --memory 512m \
+              --memory-swap 512m \
+              -p 3000:${{ vars.APP_PORT }} \
+              -e APP_PORT="${{ vars.APP_PORT }}" \
+              -e TELEGRAM_BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}" \
+              -e WEBSHARE_API_KEY="${{ secrets.WEBSHARE_API_KEY }}" \
+              -e SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+              -e POSTGRES_HOST="${{ secrets.POSTGRES_HOST }}" \
+              -e POSTGRES_USER="${{ secrets.POSTGRES_USER }}" \
+              -e POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
+              -e POSTGRES_DB="${{ secrets.POSTGRES_DB }}" \
+              -e POSTGRES_PORT="${{ secrets.POSTGRES_PORT }}" \
+              -e REDIS_HOST="${{ secrets.REDIS_HOST }}" \
+              -e REDIS_PORT="${{ secrets.REDIS_PORT }}" \
+              -e REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}" \
+              -e TELEGRAM_LOG_CHAT_ID="${{ vars.TELEGRAM_LOG_CHAT_ID }}" \
+              -e ENABLE_BOT_VERIFICATION="${{ vars.ENABLE_BOT_VERIFICATION }}" \
+              -e PROMETHEUS_PRINT_LOG="${{ vars.PROMETHEUS_PRINT_LOG }}" \
+              -e ENABLE_BOT_POOL_TRACKING="${{ vars.ENABLE_BOT_POOL_TRACKING }}" \
+              -e SOLANA_ENDPOINT="${{ vars.SOLANA_ENDPOINT }}" \
+              ${{ vars.APP_NAME }}:${{ github.sha }}
