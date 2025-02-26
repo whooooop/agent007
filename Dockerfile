@@ -15,6 +15,9 @@ RUN pnpm build
 
 FROM base
 RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
     sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
