@@ -7,7 +7,6 @@
     "url": "https://github.com/whooooop/agent007.git"
   },
   "scripts": {
-    "install": "node ./cmd.mjs install",
     "build": "tsc",
     "dev": "ts-node src/start.ts",
     "start": "node ./dist/start.js",

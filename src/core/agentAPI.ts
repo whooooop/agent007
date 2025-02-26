@@ -13,14 +13,12 @@ import { TelegramAccountWatchEntity } from "../entities/telegramAccountWatch.ent
 import { TelegramRepository } from "../repositories/telegram.repository";
 import { TelegramService } from "../components/telegram/telegram.service";
 import { AppTelegramClientConfig } from "../components/telegram/types/telegramClientConfig.types";
-import { SolanaWallet, SolanaWalletConfig } from "../components/solana/solana.wallet";
 
 interface LoggerConfig {
   levels?: LogLevel[];
   excludeContexts?: []
 }
 interface AppWalletsConfig {
-  solana: SolanaWalletConfig
 }
 
 export interface AgentAPIConfig {
@@ -37,7 +35,6 @@ export class AgentAPI {
   private readonly solanaClient: SolanaClient;
   private readonly telegramClient: AppTelegramClient;
 
-  readonly solanaWallet: SolanaWallet;
 
   private readonly solanaRepository: SolanaRepository;
   private readonly telegramRepository: TelegramRepository;
@@ -72,10 +69,6 @@ export class AgentAPI {
      */
     this.solanaClient = new SolanaClient(config.solanaClient);
     this.telegramClient = new AppTelegramClient(config.telegram);
-
-    if (config.wallets?.solana) {
-      this.solanaWallet = new SolanaWallet(config.wallets.solana);
-    }
 
     /**
      * Bootstrap Repositories
