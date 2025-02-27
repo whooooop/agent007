@@ -23,5 +23,4 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/dist /app/dist
-COPY --from=build /app/node_modules /app/node_modules 
 CMD ["pnpm", "start"]
